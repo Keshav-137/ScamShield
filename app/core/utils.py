@@ -3,8 +3,10 @@
 import re
 import tldextract
 
-# Offline: bundled public-suffix snapshot; .bank.in added for Indian banks.
+# Offline: bundled public-suffix snapshot; bank.in / fin.in added so they parse as suffixes.
 extract = tldextract.TLDExtract(suffix_list_urls=(), extra_suffixes=["bank.in", "fin.in"])
+
+PHONE_RE = re.compile(r"\+?\d[\d\s\-()]{6,18}\d")
 
 
 def reg_domain(ext) -> str:
@@ -25,3 +27,13 @@ def local_digits(value: str) -> str:
 
 def registered_domain(host_or_url: str) -> str:
     return reg_domain(extract(host_or_url))
+
+
+def extract_numbers(text: str) -> set:
+    """Phone-like numbers (8-11 digits) found in free text, as local digits."""
+    out = set()
+    for m in PHONE_RE.findall(text or ""):
+        d = local_digits(m)
+        if 8 <= len(d) <= 11 and not re.fullmatch(r"(?:19|20)\d{2}(?:19|20)\d{2}", d):
+            out.add(d)
+    return out
