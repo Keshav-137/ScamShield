@@ -127,6 +127,17 @@ class OfflineChecks(unittest.TestCase):
         finally:
             serpapi_service.api_key, claude_service.client = original_key, original_client
 
+    def test_live_found_number_counts_as_official(self) -> None:
+        profile = lookup_brand("SBI").model_copy(deep=True)
+        profile.live_helplines = ["1800999888"]
+        result, _ = official_crawler_service.verify(ni_for("1800 999 888", "SBI"), profile)
+        self.assertIs(result, True)
+
+    def test_stats_masking(self) -> None:
+        from app.services.stats_service import mask
+        self.assertTrue(mask("PHONE", "+919876543210").endswith("10"))
+        self.assertNotIn("9876", mask("PHONE", "+919876543210"))
+
 
 if __name__ == "__main__":
     print(f"Offline checks (no network). Repository: {PROJECT_ROOT}")

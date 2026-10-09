@@ -20,8 +20,11 @@ class Settings(BaseSettings):
 
     SERPAPI_TIMEOUT: float = 45.0
     CACHE_TTL_SECONDS: int = 3600
-    RATE_LIMIT_PER_MINUTE: int = 30   # per IP on POST /api/*, 0 disables
+    RATE_LIMIT_PER_MIN: int = 30   # per IP on POST /api/*, 0 disables
+    RATE_LIMIT_PER_MINUTE: int = 30
+    DAILY_SEARCH_BUDGET: int = 50
     DATA_DIR: str = "data"
+    STATS_FILE: str = "stats.json"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
