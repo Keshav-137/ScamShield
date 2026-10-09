@@ -8,6 +8,7 @@ from app.models.schemas import (EvidenceItem, EvidenceSourceType, InputType, Nor
                                 RiskLevel, SignalBreakdown)
 from app.services.brand_directory import BRAND_DIRECTORY, OfficialBrandProfile, lookup_brand
 from app.services.official_crawler import official_crawler_service
+from app.services.phone_intel import phone_intel
 
 SCAM_RE = re.compile(
     r"\b(?:fraud\w*|scam\w*|complaint\w*|cybercrime|fir|cheat\w*|impersonat\w*|fake|stolen|unauthori[sz]ed|phishing)\b",
@@ -122,6 +123,19 @@ def calculate_risk_score(
                 signal_name="MOBILE_NUMBER_AS_CUSTOMER_CARE",
                 description=f"Ordinary mobile number claiming to be {profile.display_name}. Official helplines are usually toll-free or landline numbers.",
                 score_impact=15))
+
+    # 4b. Free offline phone intelligence (type / region / carrier)
+    if ni.input_type == InputType.PHONE:
+        info = phone_intel(ni.extracted_phone_e164 or ni.normalized_value)
+        if info and (info["type"] != "UNKNOWN" or info["region"] or info["carrier"]):
+            impact = 10 if info["risky"] else 0
+            score += impact
+            signals.append(SignalBreakdown(
+                signal_name="PHONE_INTEL",
+                description=(f"{info['type']} number" + (f", region: {info['region']}" if info["region"] else "")
+                             + (f", carrier: {info['carrier']}" if info["carrier"] else "")
+                             + ". Carrier data can be outdated because of number portability."),
+                score_impact=impact))
 
     # 5. Search poisoning: lookalike domains ranking for a brand search
     if ni.input_type == InputType.BRAND_SEARCH and profile:

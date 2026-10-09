@@ -1,4 +1,4 @@
-"""app/services/domain_intel.py — Free threat intel: RDAP domain age, OpenPhish feed, Google Safe Browsing."""
+"""app/services/domain_intel.py — Free threat intel: RDAP age, OpenPhish, Safe Browsing, VirusTotal."""
 
 import asyncio
 import logging
@@ -67,18 +67,38 @@ async def safe_browsing(urls: List[str]) -> List[str]:
             return sorted({m.get("threatType", "UNKNOWN") for m in r.json().get("matches", [])})
         log.info("Safe Browsing HTTP %s", r.status_code)
     except Exception as exc:
-        log.info("Safe Browsing failed: %r", exc)
+        log.info("Safe Browsing request failed (%s)", type(exc).__name__)  # not %r: URL contains the key
     return []
+
+
+async def virustotal_flags(domain: str) -> int:
+    """Number of VirusTotal engines marking the domain malicious or suspicious (0 if no key / unknown)."""
+    if not settings.VIRUSTOTAL_API_KEY:
+        return 0
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            r = await client.get(f"https://www.virustotal.com/api/v3/domains/{domain}",
+                                 headers={"x-apikey": settings.VIRUSTOTAL_API_KEY})
+        if r.status_code == 200:
+            stats = r.json()["data"]["attributes"].get("last_analysis_stats", {})
+            return int(stats.get("malicious", 0)) + int(stats.get("suspicious", 0))
+        log.info("VirusTotal HTTP %s", r.status_code)
+    except Exception as exc:
+        log.info("VirusTotal failed: %r", exc)
+    return 0
 
 
 async def inspect_domain(host: str, domain: str) -> Tuple[Optional[int], List[str]]:
     """Returns (domain_age_days, threat_hits)."""
-    age, feed, sb = await asyncio.gather(
+    age, feed, sb, vt = await asyncio.gather(
         domain_age_days(domain), openphish_hit(host),
-        safe_browsing([f"http://{host}/", f"https://{host}/"]), return_exceptions=True)
+        safe_browsing([f"http://{host}/", f"https://{host}/"]), virustotal_flags(domain),
+        return_exceptions=True)
     hits: List[str] = []
     if feed is True:
         hits.append("OpenPhish community feed")
     if isinstance(sb, list) and sb:
         hits.append(f"Google Safe Browsing: {', '.join(sb)}")
+    if isinstance(vt, int) and vt >= 2:
+        hits.append(f"VirusTotal: {vt} security engines flag this domain")
     return (age if isinstance(age, int) else None), hits
