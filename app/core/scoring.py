@@ -101,15 +101,28 @@ def calculate_risk_score(
                 ni.normalized_value, profile
             )
             if is_official:
-                official_match = True
-                score -= 30
-                signals.append(
-                    SignalBreakdown(
-                        signal_name="OFFICIAL_SOURCE_MATCH",
-                        description=reason,
-                        score_impact=-30,
+                if profile.source == "curated":
+                    official_match = True
+                    score -= 30
+                    signals.append(
+                        SignalBreakdown(
+                            signal_name="OFFICIAL_SOURCE_MATCH",
+                            description=reason,
+                            score_impact=-30,
+                        )
                     )
-                )
+                else:
+                    score -= 10
+                    signals.append(
+                        SignalBreakdown(
+                            signal_name="DISCOVERED_SOURCE_MATCH",
+                            description=(
+                                f"{reason} This contact was found through live search "
+                                "consensus and has not been independently curated."
+                            ),
+                            score_impact=-10,
+                        )
+                    )
             elif claimed:
                 impact = 25 if profile.source == "curated" else 15
                 if ni.input_type == InputType.PHONE and not profile.official_helplines:
@@ -133,7 +146,7 @@ def calculate_risk_score(
 
     if ni.input_type == InputType.URL:
         is_lookalike, penalty, explanation = evaluate_domain_similarity(
-            ni.extracted_host or ni.extracted_domain or ni.normalized_value,
+            ni.extracted_domain or ni.normalized_value,
             profile.brand_id if profile else None,
         )
         if is_lookalike:
