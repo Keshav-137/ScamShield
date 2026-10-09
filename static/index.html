@@ -17,6 +17,7 @@
     h3{margin:14px 0 4px;font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
     ul{margin:0;padding-left:18px}a{color:#8fb0ff}.ev{border-top:1px solid var(--ln);padding:8px 0}.ev small{color:var(--mut)}
     .warn{color:#fbbf24}.chips button{background:#222c45;padding:6px 10px;font-weight:400;margin:2px}
+    textarea{width:100%;min-height:130px;resize:vertical;margin-bottom:8px;font:inherit;border-radius:8px;border:1px solid var(--ln);background:#0c1120;color:var(--tx);padding:10px}
   </style>
 </head>
 <body>
@@ -37,12 +38,31 @@
       <div class="chips" id="ex"></div>
     </div>
     <div id="out"></div>
+    <section class="card">
+      <h2>Check a suspicious message</h2>
+      <p class="sub">Paste an SMS or WhatsApp message to identify and investigate the contact details it contains.</p>
+      <textarea id="message" maxlength="3000" placeholder="Paste the message here (up to 3,000 characters)"></textarea>
+      <button id="analyze">Analyze message</button>
+      <div id="messageOut"></div>
+    </section>
   </main>
   <script>
     const $=id=>document.getElementById(id);
     const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
     const safe=u=>/^https?:\/\//i.test(u||"")?esc(u):"#";
     const list=(t,a)=>a&&a.length?`<h3>${t}</h3><ul>${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"";
+    const renderReport=d=>`<div class="card">
+      <span class="badge ${esc(d.risk_level)}">${esc(d.risk_level)} · ${esc(d.risk_score)}/100</span>
+      <small> confidence ${esc(d.confidence)} · ${esc(d.input_type)}</small>
+      <p>${esc(d.summary)}</p>
+      ${(d.warnings||[]).map(w=>`<p class="warn">⚠ ${esc(w)}</p>`).join("")}
+      ${list("Risk factors",d.risk_factors)}${list("Recommended actions",d.recommended_actions)}
+      ${list("Not verified",d.unverified_points)}
+      ${d.official_contacts?`<h3>Official contacts: ${esc(d.official_contacts.display_name)} (${esc(d.official_contacts.source||"curated")})</h3><ul><li>Websites: ${esc((d.official_contacts.domains||[]).join(", "))}</li><li>Helplines: ${esc((d.official_contacts.helplines||[]).join(", "))}</li></ul>`:""}
+      <h3>Why (signals)</h3><ul>${(d.signals||[]).map(s=>`<li><b>${esc(s.signal_name)}</b> (${s.score_impact>0?"+":""}${esc(s.score_impact)}): ${esc(s.description)}</li>`).join("")}</ul>
+      <h3>Evidence (${(d.evidence||[]).length})</h3>
+      ${(d.evidence||[]).map(e=>`<div class="ev"><small>${esc(e.source_type)}</small><br><a href="${safe(e.url)}" target="_blank" rel="noopener noreferrer">${esc(e.title)}</a><br><small>${esc(e.snippet)}</small></div>`).join("")}
+    </div>`;
     ["SBI customer care helpline","sbi-helpline-support.xyz","hdfcbank.net","support@okaxis"].forEach(x=>{
       const b=document.createElement("button");b.textContent=x;b.onclick=()=>{$("q").value=x;go()};$("ex").appendChild(b)});
     async function go(){
@@ -52,23 +72,29 @@
         const r=await fetch("/api/v1/investigate",{method:"POST",headers:{"Content-Type":"application/json"},
           body:JSON.stringify({query:q,claimed_brand:$("b").value.trim()||null,language:$("l").value})});
         const d=await r.json();if(!r.ok)throw new Error(d.detail||r.status);
-        const oc=d.official_contacts;
-        $("out").innerHTML=`<div class="card">
-          <span class="badge ${d.risk_level}">${d.risk_level} · ${d.risk_score}/100</span>
-          <small> confidence ${esc(d.confidence)} · ${esc(d.input_type)}</small>
-          <p>${esc(d.summary)}</p>
-          ${d.warnings.map(w=>`<p class="warn">⚠ ${esc(w)}</p>`).join("")}
-          ${list("Risk factors",d.risk_factors)}${list("Recommended actions",d.recommended_actions)}
-          ${list("Not verified",d.unverified_points)}
-          ${oc?`<h3>Official contacts: ${esc(oc.display_name)}</h3><ul><li>Websites: ${esc(oc.domains.join(", "))}</li><li>Helplines: ${esc(oc.helplines.join(", "))}</li></ul>`:""}
-          <h3>Why (signals)</h3><ul>${d.signals.map(s=>`<li><b>${esc(s.signal_name)}</b> (${s.score_impact>0?"+":""}${s.score_impact}): ${esc(s.description)}</li>`).join("")}</ul>
-          <h3>Evidence (${d.evidence.length})</h3>
-          ${d.evidence.map(e=>`<div class="ev"><small>${esc(e.source_type)}</small><br><a href="${safe(e.url)}" target="_blank" rel="noopener noreferrer">${esc(e.title)}</a><br><small>${esc(e.snippet)}</small></div>`).join("")}
-        </div>`;
+        $("out").innerHTML=renderReport(d);
       }catch(e){$("out").innerHTML=`<div class="card warn">Error: ${esc(e.message)}</div>`}
       $("go").disabled=false;$("go").textContent="Investigate";
     }
+    async function analyzeMessage(){
+      const message=$("message").value.trim();if(message.length<5)return;
+      const button=$("analyze");button.disabled=true;button.textContent="Analyzing…";$("messageOut").innerHTML="";
+      try{
+        const r=await fetch("/api/v1/analyze-message",{method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({message,language:$("l").value})});
+        const d=await r.json();if(!r.ok)throw new Error(d.detail||r.status);
+        $("messageOut").innerHTML=`<div class="card">
+          <span class="badge ${esc(d.overall_risk_level)}">${esc(d.overall_risk_level)} · ${esc(d.overall_risk_score)}/100</span>
+          ${d.brand?`<p>Claimed brand: ${esc(d.brand)}</p>`:""}
+          <p>Detected category: ${esc(d.scam_type)}</p>
+          ${list("Tactics detected",d.tactics)}
+          ${d.reports.map(renderReport).join("")}
+        </div>`;
+      }catch(e){$("messageOut").innerHTML=`<div class="card warn">Error: ${esc(e.message)}</div>`}
+      button.disabled=false;button.textContent="Analyze message";
+    }
     $("go").onclick=go;$("q").addEventListener("keydown",e=>e.key==="Enter"&&go());
+    $("analyze").onclick=analyzeMessage;
   </script>
 </body>
 </html>

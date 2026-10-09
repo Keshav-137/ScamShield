@@ -4,6 +4,7 @@ Curated ground-truth registry for high-risk Indian brands.
 """
 
 from typing import Dict, List, Optional
+import re
 from pydantic import BaseModel
 
 
