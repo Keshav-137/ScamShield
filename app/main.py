@@ -80,6 +80,7 @@ async def investigate_contact(payload: InvestigateRequest):
         )
 
         # Step 5: Claude Multilingual Synthesis
+        warnings = []
         explanation = await claude_service.generate_explanation(
             query=payload.query,
             risk_level=risk_level,
@@ -88,6 +89,8 @@ async def investigate_contact(payload: InvestigateRequest):
             signals=signals,
             evidence=evidence_items
         )
+        if explanation.pop("_fallback", False):
+            warnings.append("Claude unavailable; built-in template explanation used.")
 
         # Step 6: Assemble Unified Investigation Report
         return InvestigationReport(
@@ -100,6 +103,7 @@ async def investigate_contact(payload: InvestigateRequest):
             confidence=confidence,
             signals=signals,
             evidence=evidence_items,
+            warnings=warnings,
             summary=explanation.get("summary", ""),
             what_was_checked=explanation.get("what_was_checked", []),
             risk_factors=explanation.get("risk_factors", []),

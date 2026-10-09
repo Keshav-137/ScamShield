@@ -5,9 +5,12 @@ Multilingual explanation generator powered by Claude.
 
 from typing import List, Dict, Any
 import json
+import logging
 from anthropic import AsyncAnthropic
 from app.config import settings
 from app.models.schemas import Language, RiskLevel, SignalBreakdown, EvidenceItem
+
+log = logging.getLogger("scamshield.claude")
 
 
 class ClaudeExplanationService:
@@ -28,7 +31,9 @@ class ClaudeExplanationService:
         Produces a structured JSON explanation.
         """
         if not self.client:
-            return self._fallback_explanation(risk_level, risk_score, language)
+            explanation = self._fallback_explanation(risk_level, risk_score, language)
+            explanation["_fallback"] = True
+            return explanation
 
         system_prompt = (
             "You are ScamShield India's cybersecurity analyst. "
@@ -55,7 +60,7 @@ class ClaudeExplanationService:
 
         try:
             response = await self.client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model=settings.CLAUDE_MODEL,
                 max_tokens=1000,
                 temperature=0.2,
                 system=system_prompt,
@@ -68,8 +73,11 @@ class ClaudeExplanationService:
             if "```json" in raw_text:
                 raw_text = raw_text.split("```json")[1].split("```")[0].strip()
             return json.loads(raw_text)
-        except Exception:
-            return self._fallback_explanation(risk_level, risk_score, language)
+        except Exception as exc:
+            log.warning("Claude call failed, using fallback: %s", exc)
+            explanation = self._fallback_explanation(risk_level, risk_score, language)
+            explanation["_fallback"] = True
+            return explanation
 
     def _fallback_explanation(self, risk_level: RiskLevel, risk_score: int, language: Language) -> Dict[str, Any]:
         """Deterministic multilingual template if API is unreachable."""

@@ -53,6 +53,15 @@ BRAND_DIRECTORY: Dict[str, OfficialBrandProfile] = {
         official_helplines=["18604195555", "18605005555"],
         official_upi_handles=["axisbank", "okaxis"],
     ),
+    "bob": OfficialBrandProfile(
+        brand_id="bob",
+        display_name="Bank of Baroda",
+        aliases=["bank of baroda", "bankofbaroda", "bob"],
+        official_domains=["bankofbaroda.bank.in", "bankofbaroda.in"],
+        official_helplines=["18005700", "18005000"],
+        official_upi_handles=[],
+        notes="Official site lists 1800 5700 and 1800 5000 as domestic toll-free numbers. No UPI handle is published there.",
+    ),
     "paytm": OfficialBrandProfile(
         brand_id="paytm",
         display_name="Paytm Payments Bank",
