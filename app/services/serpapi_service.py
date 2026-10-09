@@ -14,6 +14,7 @@ class SerpApiService:
 
     def __init__(self):
         self.api_key = settings.SERPAPI_API_KEY
+        self._cache: Dict[str, tuple] = {}
 
     @property
     def enabled(self) -> bool:
