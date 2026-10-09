@@ -147,6 +147,75 @@ class OfflineChecks(unittest.TestCase):
         self.assertTrue(number_is_present("Airtel support: (121)", "121"))
         self.assertFalse(number_is_present("Reference 91210 is unrelated", "121"))
 
+    def test_live_brand_verification_uses_only_official_domain_results(self) -> None:
+        import asyncio
+        from unittest.mock import patch
+
+        from app.services.brand_resolver import brand_resolver
+
+        profile = lookup_brand("SBI").model_copy(deep=True)
+        original_key = serpapi_service.api_key
+        serpapi_service.api_key = "test-key"
+        response = {
+            "organic_results": [
+                {"link": "https://www.sbi.co.in/web/customer-care", "title": "SBI contact",
+                 "snippet": "Call 1800 1234 for support."},
+                {"link": "https://fake-example.com/sbi", "title": "SBI number",
+                 "snippet": "Call 1800 2100."},
+            ]
+        }
+        try:
+            with patch.object(serpapi_service, "raw", new=AsyncMock(return_value=response)):
+                asyncio.run(brand_resolver.live_verify(profile))
+        finally:
+            serpapi_service.api_key = original_key
+
+        self.assertTrue(profile.live_checked)
+        self.assertEqual(profile.live_helplines, ["18001234"])
+
+    def test_known_brand_investigation_returns_contacts_without_attribute_error(self) -> None:
+        import json
+        from unittest.mock import patch
+
+        from app.main import app
+        from app.services.brand_resolver import brand_resolver
+        from app.services.claude_service import claude_service
+        from app.services.stats_service import stats_service
+
+        async def empty_results(*args, **kwargs):
+            return []
+
+        original_key = serpapi_service.api_key
+        serpapi_service.api_key = ""
+        try:
+            with patch.object(brand_resolver, "live_verify", new=AsyncMock()), \
+                    patch.object(serpapi_service, "search_google", new=AsyncMock(side_effect=empty_results)), \
+                    patch.object(serpapi_service, "search_google_news", new=AsyncMock(side_effect=empty_results)), \
+                    patch.object(serpapi_service, "search_google_maps", new=AsyncMock(side_effect=empty_results)), \
+                    patch.object(claude_service, "generate_explanation", new=AsyncMock(return_value={
+                        "summary": "Offline test report.", "what_was_checked": [],
+                        "risk_factors": [], "unverified_points": [], "recommended_actions": [],
+                    })), \
+                    patch.object(stats_service, "record"):
+                with TestClient(app) as client:
+                    response = client.post(
+                        "/api/v1/investigate/stream",
+                        json={"query": "SBI customer care", "language": "en"},
+                    )
+        finally:
+            serpapi_service.api_key = original_key
+
+        self.assertEqual(response.status_code, 200)
+        events = [
+            json.loads(frame.removeprefix("data: "))
+            for frame in response.text.split("\n\n")
+            if frame.startswith("data: ")
+        ]
+        result = next((event["data"] for event in events if event["type"] == "result"), None)
+        self.assertIsNotNone(result)
+        self.assertIsNotNone(result["official_contacts"])
+        self.assertFalse(result["official_contacts"]["live_checked"])
+
     def test_image_analysis_sends_image_and_returns_description_and_transcription(self) -> None:
         import asyncio
         from types import SimpleNamespace
@@ -184,6 +253,34 @@ class OfflineChecks(unittest.TestCase):
 
         self.assertEqual(raised.exception.status_code, 503)
         self.assertIn("quota", raised.exception.detail.lower())
+
+    def test_gemini_429_retries_once_with_flash_model(self) -> None:
+        import asyncio
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        from app.config import settings
+        from app.services.llm_service import LLM, _gemini
+
+        response = SimpleNamespace(
+            status_code=200,
+            json=lambda: {"candidates": [{"content": {"parts": [{"text": "image result"}]}}]},
+        )
+        llm = LLM()
+        llm.anthropic = None
+        call = AsyncMock(side_effect=[
+            SimpleNamespace(status_code=429, text="quota exceeded"),
+            response,
+        ])
+        with patch.object(settings, "GEMINI_API_KEY", "test-key"), \
+                patch.object(settings, "GEMINI_MODEL", "gemini-heavy-model"), \
+                patch.object(LLM, "_gemini_call", new=call), \
+                patch.dict(_gemini, {"model": None}):
+            result = asyncio.run(llm.complete("", "Describe this image.", image=(b"image", "image/png")))
+
+        self.assertEqual(result, "image result")
+        self.assertEqual([entry.args[1] for entry in call.call_args_list],
+                         ["gemini-heavy-model", "gemini-2.5-flash"])
 
     def test_image_without_contact_text_still_returns_description(self) -> None:
         import asyncio
