@@ -1,0 +1,106 @@
+"""
+app/services/brand_directory.py
+Curated ground-truth registry for high-risk Indian brands.
+"""
+
+from typing import Dict, List, Optional
+from pydantic import BaseModel
+
+
+class OfficialBrandProfile(BaseModel):
+    brand_id: str
+    display_name: str
+    aliases: List[str]
+    official_domains: List[str]
+    official_helplines: List[str]
+    official_upi_handles: List[str]
+    notes: Optional[str] = None
+
+
+BRAND_DIRECTORY: Dict[str, OfficialBrandProfile] = {
+    "sbi": OfficialBrandProfile(
+        brand_id="sbi",
+        display_name="State Bank of India",
+        aliases=["sbi", "state bank of india", "state bank", "yono"],
+        official_domains=["sbi.co.in", "onlinesbi.sbi", "bank.sbi"],
+        official_helplines=["18001234", "18002100", "1800112211", "18004253800", "08026599990"],
+        official_upi_handles=["sbi", "oksbi"],
+        notes="India's largest public sector bank. Prime target for search poisoning."
+    ),
+    "hdfc": OfficialBrandProfile(
+        brand_id="hdfc",
+        display_name="HDFC Bank",
+        aliases=["hdfc", "hdfc bank"],
+        official_domains=["hdfcbank.com"],
+        official_helplines=["18001600", "18002600", "18002026161"],
+        official_upi_handles=["hdfcbank", "okhdfcbank"],
+        notes="Large private bank frequently impersonated with fake SMS netbanking links."
+    ),
+    "icici": OfficialBrandProfile(
+        brand_id="icici",
+        display_name="ICICI Bank",
+        aliases=["icici", "icici bank", "imobile"],
+        official_domains=["icicibank.com"],
+        official_helplines=["18001080"],
+        official_upi_handles=["icici", "okicici"],
+        notes="High-frequency target for APK and customer-care helpline fraud."
+    ),
+    "axis": OfficialBrandProfile(
+        brand_id="axis",
+        display_name="Axis Bank",
+        aliases=["axis", "axis bank"],
+        official_domains=["axisbank.com"],
+        official_helplines=["18604195555", "18605005555"],
+        official_upi_handles=["axisbank", "okaxis"],
+    ),
+    "paytm": OfficialBrandProfile(
+        brand_id="paytm",
+        display_name="Paytm Payments Bank",
+        aliases=["paytm", "paytm payments bank", "one97"],
+        official_domains=["paytm.com", "paytmbank.com"],
+        official_helplines=["01204456456", "01203888388"],
+        official_upi_handles=["paytm"],
+    ),
+    "phonepe": OfficialBrandProfile(
+        brand_id="phonepe",
+        display_name="PhonePe",
+        aliases=["phonepe", "phone pe"],
+        official_domains=["phonepe.com"],
+        official_helplines=["08068727374", "02268727374"],
+        official_upi_handles=["ybl", "ibl", "axl"],
+    ),
+    "gpay": OfficialBrandProfile(
+        brand_id="gpay",
+        display_name="Google Pay",
+        aliases=["google pay", "gpay", "tez"],
+        official_domains=["pay.google.com", "support.google.com"],
+        official_helplines=["18004190157"],
+        official_upi_handles=["oksbi", "okhdfcbank", "okicici", "okaxis"],
+    ),
+    "airtel": OfficialBrandProfile(
+        brand_id="airtel",
+        display_name="Bharti Airtel",
+        aliases=["airtel", "airtel payments bank"],
+        official_domains=["airtel.in", "airtelbank.com"],
+        official_helplines=["121", "198", "8800688006"],
+        official_upi_handles=["airtel"],
+    ),
+    "amazon": OfficialBrandProfile(
+        brand_id="amazon",
+        display_name="Amazon India",
+        aliases=["amazon", "amazon india", "amazon pay"],
+        official_domains=["amazon.in"],
+        official_helplines=["180030009009"],
+        official_upi_handles=["apl", "rapl"],
+    )
+}
+
+
+def lookup_brand(query_text: str) -> Optional[OfficialBrandProfile]:
+    """Finds matching brand based on search query or claimed name."""
+    query_lower = query_text.lower()
+    for profile in BRAND_DIRECTORY.values():
+        for alias in profile.aliases:
+            if alias in query_lower:
+                return profile
+    return None
