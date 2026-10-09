@@ -74,6 +74,14 @@ def calculate_risk_score(
 
     # 1. Official Ground-Truth Verification
     brand_profile = lookup_brand(normalized_input.detected_brand or normalized_input.normalized_value)
+    if not brand_profile and normalized_input.input_type == InputType.PHONE:
+        for profile in BRAND_DIRECTORY.values():
+            is_official, _ = official_crawler_service.verify_against_official_profile(
+                normalized_input.normalized_value, profile
+            )
+            if is_official:
+                brand_profile = profile
+                break
     if brand_profile:
         is_official, reason = official_crawler_service.verify_against_official_profile(
             normalized_input.normalized_value, brand_profile

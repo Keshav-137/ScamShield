@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     # API Keys
     SERPAPI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
+    CLAUDE_MODEL: str = "claude-sonnet-4-6"
 
     # Scoring parameters
     CONFIDENCE_MIN_EVIDENCE_COUNT: int = 2

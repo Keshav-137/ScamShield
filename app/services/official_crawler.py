@@ -4,7 +4,8 @@ Official source comparison logic.
 """
 
 from typing import Tuple, Optional
-from app.services.brand_directory import OfficialBrandProfile, lookup_brand
+from app.core.utils import local_digits
+from app.services.brand_directory import OfficialBrandProfile
 
 
 class OfficialCrawlerService:
@@ -22,10 +23,14 @@ class OfficialCrawlerService:
             return False, "No verified official brand profile available for comparison."
 
         # Compare phone number (digits only match)
-        clean_digits = "".join(filter(str.isdigit, value))
+        clean_digits = local_digits(value)
         for helpline in profile.official_helplines:
-            clean_helpline = "".join(filter(str.isdigit, helpline))
-            if clean_digits and (clean_digits.endswith(clean_helpline) or clean_helpline.endswith(clean_digits)):
+            clean_helpline = local_digits(helpline)
+            has_indian_prefix = (
+                clean_digits.startswith("91")
+                and clean_digits[2:] == clean_helpline
+            )
+            if clean_digits and (clean_digits == clean_helpline or has_indian_prefix):
                 return True, f"Contact matches official verified helpline for {profile.display_name} ({helpline})."
 
         # Compare domain
