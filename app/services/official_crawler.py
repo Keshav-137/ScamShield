@@ -15,10 +15,11 @@ class OfficialCrawlerService:
 
         if ni.input_type == InputType.PHONE:
             digits = local_digits(ni.normalized_value)
-            for helpline in profile.official_helplines:
+            candidates = list(profile.official_helplines) + list(profile.verified_helplines) + list(profile.live_helplines)
+            for helpline in candidates:
                 if digits and digits == local_digits(helpline):
-                    return True, f"Number matches official verified helpline for {name} ({helpline})."
-            return False, f"Number is NOT in {name}'s verified helpline list."
+                    return True, f"Number matches official helpline for {name} ({helpline})."
+            return False, f"Number is NOT in {name}'s official helpline list."
 
         if ni.input_type == InputType.URL:
             reg = ni.extracted_domain or registered_domain(ni.normalized_value)

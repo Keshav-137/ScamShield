@@ -9,7 +9,7 @@ import json
 import re
 from pathlib import Path
 from typing import Dict, List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.config import settings
 from app.core.utils import local_digits
 
@@ -21,7 +21,8 @@ class OfficialBrandProfile(BaseModel):
     official_domains: List[str]
     official_helplines: List[str]
     official_upi_handles: List[str]
-    verified_helplines: List[str] = []
+    verified_helplines: List[str] = Field(default_factory=list)
+    live_helplines: List[str] = Field(default_factory=list)
     notes: Optional[str] = None
     source: str = "curated"
 
