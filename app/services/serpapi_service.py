@@ -109,5 +109,29 @@ class SerpApiService:
                 break
         return out
 
+    async def search_forums(self, query: str) -> List[EvidenceItem]:
+        """User complaints from forums (SerpApi google_forums engine)."""
+        data = await self._execute_query({"engine": "google_forums", "q": query})
+        rows = data.get("organic_results") or data.get("forum_results") or []
+        return [
+            EvidenceItem(
+                source_type=EvidenceSourceType.GOOGLE_SEARCH,
+                title=r.get("title", ""), snippet=r.get("snippet", ""), url=r.get("link"),
+                relevance_notes="Forum discussion")
+            for r in rows[:4]
+        ]
+
+    async def search_play_apps(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """Google Play app search (SerpApi google_play engine). Field names are parsed defensively."""
+        data = await self._execute_query({"engine": "google_play", "q": query, "store": "apps"})
+        items: List[Dict[str, Any]] = []
+        for section in data.get("organic_results", []):
+            rows = section.get("items") or ([section] if section.get("title") else [])
+            for it in rows:
+                items.append({"title": it.get("title", ""),
+                              "developer": it.get("author") or it.get("developer") or "",
+                              "link": it.get("link"), "rating": it.get("rating")})
+        return items[:limit]
+
 
 serpapi_service = SerpApiService()
