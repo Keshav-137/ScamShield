@@ -1,7 +1,4 @@
-"""
-app/models/schemas.py
-Pydantic schemas and enums defining the ScamShield India data contracts.
-"""
+"""app/models/schemas.py — Pydantic schemas and enums for ScamShield India."""
 
 from enum import Enum
 from typing import List, Optional
@@ -16,69 +13,44 @@ class InputType(str, Enum):
 
 
 class RiskLevel(str, Enum):
-    LOW = "LOW"             # Likely authentic / verified official source match
-    MEDIUM = "MEDIUM"       # Inconclusive, unverified third-party listing, proceed with caution
-    HIGH = "HIGH"           # Multiple conflict signals, unofficial claim, lookalike domain
-    CRITICAL = "CRITICAL"   # Direct scam report match, impersonation, verified phishing attempt
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
 
 
 class Language(str, Enum):
-    EN = "en"  # English
-    HI = "hi"  # Hindi
-    MR = "mr"  # Marathi
+    EN = "en"
+    HI = "hi"
+    MR = "mr"
 
 
 class EvidenceSourceType(str, Enum):
     GOOGLE_SEARCH = "GOOGLE_SEARCH"
     GOOGLE_MAPS = "GOOGLE_MAPS"
     GOOGLE_NEWS = "GOOGLE_NEWS"
+    GOOGLE_AUTOCOMPLETE = "GOOGLE_AUTOCOMPLETE"
     OFFICIAL_SITE = "OFFICIAL_SITE"
     THREAT_FEED = "THREAT_FEED"
 
 
-# ---------------------------------------------------------------------------
-# Request Models
-# ---------------------------------------------------------------------------
-
 class InvestigateRequest(BaseModel):
-    query: str = Field(
-        ...,
-        min_length=3,
-        max_length=500,
-        description="Raw user input: phone number, UPI ID, website URL, or brand query (e.g. 'SBI customer care')",
-        examples=["+91 9876543210", "support@sbi", "https://sbi-helpline-support.in", "SBI customer care helpline"]
-    )
-    claimed_brand: Optional[str] = Field(
-        default=None,
-        description="Optional brand name the contact claims to represent (e.g. 'SBI', 'Amazon', 'Airtel')",
-        examples=["State Bank of India", "Amazon India", "Paytm"]
-    )
-    language: Language = Field(
-        default=Language.EN,
-        description="Target language for the final investigation report"
-    )
+    query: str = Field(..., min_length=3, max_length=500,
+                       examples=["+91 9876543210", "support@sbi", "https://sbi-helpline-support.xyz", "SBI customer care"])
+    claimed_brand: Optional[str] = Field(default=None, examples=["State Bank of India", "Amazon India"])
+    language: Language = Language.EN
 
-
-# ---------------------------------------------------------------------------
-# Parsed & Normalized Input Models
-# ---------------------------------------------------------------------------
 
 class NormalizedInput(BaseModel):
     raw_query: str
     input_type: InputType
     normalized_value: str
     detected_brand: Optional[str] = None
-    
-    # Specific attributes extracted depending on input_type
-    extracted_domain: Optional[str] = None       # e.g., "sbi-care.in"
+    extracted_domain: Optional[str] = None
     extracted_host: Optional[str] = None
-    extracted_vpa_handle: Optional[str] = None   # e.g., "okhicici" from "user@okhicici"
-    extracted_phone_e164: Optional[str] = None   # e.g., "+919876543210"
+    extracted_vpa_handle: Optional[str] = None
+    extracted_phone_e164: Optional[str] = None
 
-
-# ---------------------------------------------------------------------------
-# Evidence Models
-# ---------------------------------------------------------------------------
 
 class EvidenceItem(BaseModel):
     source_type: EvidenceSourceType
@@ -100,44 +72,33 @@ class OfficialContacts(BaseModel):
     display_name: str
     domains: List[str]
     helplines: List[str]
+    verified_helplines: List[str] = Field(default_factory=list)  # confirmed on the brand's own website
     upi_handles: List[str]
     notes: Optional[str] = None
     source: str = "curated"
 
-
-# ---------------------------------------------------------------------------
-# Final Investigation Output
-# ---------------------------------------------------------------------------
 
 class InvestigationReport(BaseModel):
     query: str
     input_type: InputType
     normalized_value: str
     detected_brand: Optional[str] = None
-    
+
     risk_level: RiskLevel
-    risk_score: int = Field(ge=0, le=100, description="Risk score from 0 (Safe) to 100 (Extreme Risk)")
-    confidence: str = Field(description="'HIGH', 'MEDIUM', or 'LOW' confidence based on evidence quality")
-    
-    signals: List[SignalBreakdown] = Field(
-        default_factory=list,
-        description="Audit trail of which rules triggered the score"
-    )
-    
-    evidence: List[EvidenceItem] = Field(
-        default_factory=list,
-        description="List of raw verified evidence items collected from web/maps/news"
-    )
+    risk_score: int = Field(ge=0, le=100)
+    confidence: str
+
+    signals: List[SignalBreakdown] = Field(default_factory=list)
+    evidence: List[EvidenceItem] = Field(default_factory=list)
     official_contacts: Optional[OfficialContacts] = None
     warnings: List[str] = Field(default_factory=list)
-    
-    # Explanations generated by Claude in the chosen language
-    summary: str = Field(description="Clear summary of what was found")
+
+    summary: str
     what_was_checked: List[str] = Field(default_factory=list)
     risk_factors: List[str] = Field(default_factory=list)
     unverified_points: List[str] = Field(default_factory=list)
     recommended_actions: List[str] = Field(default_factory=list)
-    
+
     language: Language
 
 
@@ -151,5 +112,5 @@ class MessageAnalysisResponse(BaseModel):
     scam_type: str
     tactics: List[str] = Field(default_factory=list)
     overall_risk_level: RiskLevel
-    overall_risk_score: int = Field(ge=0, le=100)
-    reports: List[InvestigationReport] = Field(default_factory=list)
+    overall_risk_score: int
+    reports: List[InvestigationReport]
