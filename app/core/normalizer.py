@@ -1,61 +1,53 @@
-"""
-app/core/normalizer.py
-Cleans and standardizes raw inputs into canonical formats.
-"""
+"""app/core/normalizer.py — Canonicalize raw inputs."""
 
 from typing import Optional
 from urllib.parse import urlparse
 import phonenumbers
-import tldextract
+from app.core.utils import extract, local_digits, reg_domain
 from app.models.schemas import InputType, NormalizedInput
 from app.services.brand_directory import lookup_brand
 
 
 def normalize_input(raw_query: str, input_type: InputType, claimed_brand: Optional[str] = None) -> NormalizedInput:
     cleaned = raw_query.strip()
-    detected_profile = lookup_brand(claimed_brand or cleaned)
-    detected_brand_name = detected_profile.display_name if detected_profile else claimed_brand
+    profile = lookup_brand(claimed_brand) or lookup_brand(cleaned)
+    detected_brand = profile.display_name if profile else claimed_brand
 
-    extracted_domain = None
-    extracted_vpa_handle = None
-    extracted_phone_e164 = None
-    normalized_value = cleaned
+    domain = host = vpa = e164 = None
+    value = cleaned
 
     if input_type == InputType.PHONE:
+        digits = local_digits(cleaned)
         try:
             parsed = phonenumbers.parse(cleaned, "IN")
             if phonenumbers.is_valid_number(parsed):
-                extracted_phone_e164 = phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
-                normalized_value = extracted_phone_e164
+                e164 = phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
         except phonenumbers.NumberParseException:
-            raw_digits = "".join(filter(str.isdigit, cleaned))
-            if len(raw_digits) == 10:
-                extracted_phone_e164 = f"+91{raw_digits}"
-                normalized_value = extracted_phone_e164
+            pass
+        if not e164 and len(digits) == 10:
+            e164 = f"+91{digits}"
+        value = e164 or digits
 
     elif input_type == InputType.UPI:
-        normalized_value = cleaned.lower()
-        if "@" in normalized_value:
-            extracted_vpa_handle = normalized_value.split("@")[1]
+        value = cleaned.lower()
+        vpa = value.split("@", 1)[1]
 
     elif input_type == InputType.URL:
-        url_target = cleaned if cleaned.startswith(("http://", "https://")) else f"https://{cleaned}"
-        extracted = tldextract.extract(url_target)
-        if extracted.registered_domain:
-            extracted_domain = extracted.registered_domain.lower()
-            normalized_value = extracted_domain
+        target = cleaned if cleaned.lower().startswith(("http://", "https://")) else f"https://{cleaned}"
+        ext = extract(target)
+        host = urlparse(target).netloc.lower().split(":")[0]
+        reg = reg_domain(ext)
+        if reg:
+            domain = reg
+            value = domain
         else:
-            normalized_value = urlparse(url_target).netloc.lower()
+            value = host
 
     elif input_type == InputType.BRAND_SEARCH:
-        normalized_value = cleaned.lower()
+        value = cleaned.lower()
 
     return NormalizedInput(
-        raw_query=raw_query,
-        input_type=input_type,
-        normalized_value=normalized_value,
-        detected_brand=detected_brand_name,
-        extracted_domain=extracted_domain,
-        extracted_vpa_handle=extracted_vpa_handle,
-        extracted_phone_e164=extracted_phone_e164
+        raw_query=raw_query, input_type=input_type, normalized_value=value,
+        detected_brand=detected_brand, extracted_domain=domain, extracted_host=host,
+        extracted_vpa_handle=vpa, extracted_phone_e164=e164,
     )

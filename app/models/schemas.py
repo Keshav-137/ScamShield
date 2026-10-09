@@ -33,6 +33,7 @@ class EvidenceSourceType(str, Enum):
     GOOGLE_MAPS = "GOOGLE_MAPS"
     GOOGLE_NEWS = "GOOGLE_NEWS"
     OFFICIAL_SITE = "OFFICIAL_SITE"
+    THREAT_FEED = "THREAT_FEED"
 
 
 # ---------------------------------------------------------------------------
@@ -70,6 +71,7 @@ class NormalizedInput(BaseModel):
     
     # Specific attributes extracted depending on input_type
     extracted_domain: Optional[str] = None       # e.g., "sbi-care.in"
+    extracted_host: Optional[str] = None
     extracted_vpa_handle: Optional[str] = None   # e.g., "okhicici" from "user@okhicici"
     extracted_phone_e164: Optional[str] = None   # e.g., "+919876543210"
 
