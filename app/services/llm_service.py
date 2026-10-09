@@ -10,6 +10,9 @@ from app.config import settings
 
 log = logging.getLogger("scamshield.llm")
 
+GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
+_gemini = {"model": None}
+
 
 class LLM:
     def __init__(self):
@@ -26,6 +29,24 @@ class LLM:
     @property
     def enabled(self) -> bool:
         return self.provider is not None
+
+    @staticmethod
+    async def _gemini_call(client: httpx.AsyncClient, model: str, body: dict) -> httpx.Response:
+        # Key goes in a header, never in the URL, so errors and logs cannot leak it.
+        return await client.post(f"{GEMINI_BASE}/models/{model}:generateContent",
+                                 headers={"x-goog-api-key": settings.GEMINI_API_KEY}, json=body)
+
+    @staticmethod
+    async def _discover_model(client: httpx.AsyncClient) -> Optional[str]:
+        r = await client.get(f"{GEMINI_BASE}/models", params={"pageSize": 100},
+                             headers={"x-goog-api-key": settings.GEMINI_API_KEY})
+        if r.status_code != 200:
+            return None
+        names = [m["name"].split("/", 1)[1] for m in r.json().get("models", [])
+                 if "generateContent" in m.get("supportedGenerationMethods", [])]
+        skip = ("lite", "image", "tts", "live", "audio", "embedding", "thinking")
+        flash = sorted(n for n in names if "flash" in n and not any(s in n for s in skip))
+        return flash[-1] if flash else None
 
     async def complete(self, system: str, user: str, max_tokens: int = 1000,
                        image: Optional[Tuple[bytes, str]] = None, json_mode: bool = True) -> str:
@@ -53,12 +74,19 @@ class LLM:
                 body["systemInstruction"] = {"parts": [{"text": system}]}
             if json_mode:
                 body["generationConfig"]["responseMimeType"] = "application/json"
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.GEMINI_MODEL}:generateContent"
-            # Key goes in a header, never in the URL, so errors and logs cannot leak it.
+
             async with httpx.AsyncClient(timeout=60.0) as client:
-                r = await client.post(url, headers={"x-goog-api-key": settings.GEMINI_API_KEY}, json=body)
-            if r.status_code != 200:
-                raise RuntimeError(f"Gemini HTTP {r.status_code}: {r.text[:200]}")
+                model = _gemini["model"] or settings.GEMINI_MODEL
+                r = await self._gemini_call(client, model, body)
+                if r.status_code == 404:
+                    new_model = await self._discover_model(client)
+                    if new_model and new_model != model:
+                        log.warning("Gemini model %r unavailable, switching to %r", model, new_model)
+                        r = await self._gemini_call(client, new_model, body)
+                        model = new_model
+                if r.status_code != 200:
+                    raise RuntimeError(f"Gemini HTTP {r.status_code}: {r.text[:200]}")
+                _gemini["model"] = model
             cand = (r.json().get("candidates") or [{}])[0]
             return "".join(p.get("text", "") for p in cand.get("content", {}).get("parts", []))
 
