@@ -1,224 +1,372 @@
-# ScamShield India
+# 🛡️ ScamShield India
+### Investigate suspicious contacts before you call, click, or pay.
 
-ScamShield India is a web application and JSON API for assessing suspicious Indian contact details and messages. It checks phone numbers, UPI IDs, URLs, pasted messages, screenshots, and app names against a local brand registry, deterministic risk rules, and optional live search and threat-intelligence services.
+ScamShield India is a cybersecurity web application and JSON API that helps users assess suspicious phone numbers, UPI IDs, websites, customer-care contacts, SMS/WhatsApp messages, screenshots, and mobile app listings.
 
-ScamShield is an investigative aid, not a fraud authority. Its scores are heuristic risk indicators, not probabilities or proof that a contact is safe or fraudulent. Search results and third-party reports may be incomplete or wrong; always verify contact details through the organization’s official app or website.
+It combines **live search evidence through SerpApi, a curated brand registry, deterministic risk-scoring rules, optional threat-intelligence services, and AI-assisted explanations** to help users make more informed decisions before trusting an unfamiliar contact.
 
-## Features
+**The problem:** Fraudsters use fake customer-care numbers, lookalike websites, misleading search results, impersonated brands, and urgent messages to trick people into sharing OTPs, revealing banking credentials, or transferring money. Finding a trustworthy contact can be difficult, especially when fraudulent listings appear alongside legitimate results.
 
-- **Contact investigation:** submit a phone number, UPI ID, URL/domain, or general brand/customer-care search.
-- **Brand and contact checks:** compare inputs with curated domains, helplines, verified helplines, and UPI handles. Unknown brands can be discovered from search-result consensus when search credentials are configured.
-- **Evidence search:** optional SerpApi searches for Google Search, Google News, Google Maps, forums, and Google Play results.
-- **URL checks:** lookalike-domain rules plus registration-age lookup through RDAP; optional OpenPhish, Google Safe Browsing, and VirusTotal checks.
-- **Message analysis:** identify phone numbers, links, and UPI IDs in pasted text, classify common scam themes and pressure tactics, and investigate up to three extracted contacts.
-- **Screenshot analysis:** send an uploaded image to the configured AI provider for a short image description and text transcription, then investigate any contacts found in the transcription. Supported uploads are PNG, JPEG, and WEBP, up to 5 MB.
-- **Possible fake-app check:** search Google Play results and flag some likely copies using app titles and developer names.
-- **Progressive UI:** streamed progress updates for investigation, message analysis, and screenshot analysis.
-- **Dashboard:** local usage counters, recent checks, provider status, SerpApi usage, and live scam-news results.
-- **English, Hindi, and Marathi report language selection.**
+**The solution:** ScamShield investigates the available evidence, compares submitted details against known brand information, identifies suspicious signals, and produces an explainable risk report with recommended next steps.
 
-## Technology stack
+ScamShield is an investigative aid, not a fraud authority. Its scores are heuristic indicators, not probabilities or proof of fraud. A low-risk result does not guarantee that a contact is safe.
 
-| Area | Technology |
-| --- | --- |
-| Backend/API | Python, FastAPI, Pydantic v2, Pydantic Settings |
-| ASGI server | Uvicorn |
-| Browser UI | Plain HTML, CSS, and JavaScript; no frontend framework or build step |
-| Validation and data contracts | Pydantic request/response models |
-| HTTP integrations | HTTPX |
-| Phone parsing/intelligence | `phonenumbers` |
-| Domain parsing | `tldextract`, with an offline suffix snapshot and extra Indian financial suffixes |
-| Language models | Anthropic SDK or Gemini `generateContent` REST API |
-| Local persistence | JSON files (`stats.json` and verified-registry data) |
-| Tests | Python `unittest` checks, plus opt-in live checks |
+---
 
-Installable Python dependencies are listed in [requirements.txt](./requirements.txt). The repository does not include a frontend package manager or compile step.
+## ✨ Features
 
-## Investigation workflow
+- **Contact investigation:** Check phone numbers, UPI IDs, URLs, domains, and brand/customer-care queries.
+- **Live search evidence:** Use SerpApi to retrieve relevant Google Search, Google News, Google Maps, Google Forums, and Google Play results.
+- **Brand and contact verification:** Compare submitted details against a curated registry of official domains, helplines, and UPI handles.
+- **Brand discovery:** Attempt to discover unknown brands and candidate official domains using available search evidence.
+- **Helpline investigation:** Search results from a brand's registered official domains can be checked for matching helpline information.
+- **Lookalike-domain detection:** Identify suspicious domain similarities and investigate domain registration age.
+- **Threat intelligence:** Integrate OpenPhish, Google Safe Browsing, and VirusTotal where supported and configured.
+- **Message analysis:** Extract phone numbers, URLs, and UPI IDs; identify common scam themes and pressure tactics; investigate up to three extracted contacts.
+- **Screenshot analysis:** Use a configured AI provider to describe an uploaded screenshot, transcribe its text, and investigate extracted contact details.
+- **Possible fake-app detection:** Search Google Play listings and flag potential copies using title and developer-name heuristics.
+- **Explainable risk reports:** Present a score, risk level, detected signals, supporting evidence, warnings, and recommended actions.
+- **Progressive investigation UI:** Display investigation progress through streaming API endpoints.
+- **Dashboard:** Show local usage statistics, recent checks, provider status, SerpApi usage information, and live scam-news results.
+- **Multilingual reports:** Support English, Hindi, and Marathi report language selection.
+- **JSON API:** Expose investigation and analysis capabilities through FastAPI endpoints.
 
-For a normal contact investigation, the backend follows this pipeline:
+## 🎯 How SerpApi Powers ScamShield
 
-1. **Validate the request.** Pydantic constrains the query length and language.
-2. **Classify and normalize.** The input is identified as `PHONE`, `UPI`, `URL`, or `BRAND_SEARCH`. Phone digits and URL domains are normalized for comparison.
-3. **Resolve a brand.** The app checks the local registry. For unknown brands it may use search-result consensus to discover a candidate official domain and contact numbers.
-4. **Optionally check official-domain search results.** For a known brand, live helpline lookup queries SerpApi with the brand’s registered domains and checks matching result snippets for known helplines. This is not a direct crawl of the brand’s website and does not establish that the number is genuine.
-5. **Gather evidence.** Depending on input type, the app requests relevant web, news, Maps, forums, or brand-customer-care search results. URL inputs also trigger domain-age and configured threat-intelligence lookups. Search tasks are gathered concurrently and results are deduplicated by registered domain.
-6. **Apply deterministic risk rules.** The scoring code combines the normalized input, brand registry, search evidence, domain age, and threat-feed results.
-7. **Explain and return a report.** An enabled AI provider writes an explanation; if no provider is available or explanation generation fails, the app uses a built-in template. The report includes score, risk level, signals, evidence, warnings, and suggested actions.
-8. **Record local statistics.** Counters and a capped list of recent checks are written to the configured stats JSON file.
+**SerpApi is the live-search integration that supplies external search evidence to ScamShield.** It helps the application investigate information that is not already available in its local brand registry.
+
+| Search engine or service | Purpose |
+|---|---|
+| Google Search | Find information about submitted contacts, domains, UPI IDs, brand websites, customer-care listings, and potential search-result manipulation. |
+| Google News | Find relevant news reports and retrieve scam-related news for the dashboard. |
+| Google Maps | Examine business listings, contact details, and possible brand-discovery evidence. |
+| Google Forums | Search for user complaints and discussions relevant to a suspicious contact. |
+| Google Play | Find app listings and help identify possible impersonation or cloned apps. |
+| SerpApi Account API | Retrieve account usage information for the dashboard when supported by the configured integration. |
+
+The application can execute relevant searches concurrently, process the returned evidence, and remove duplicate results.
+
+### Why this matters
+
+A phone number or website may not exist in ScamShield's local registry. SerpApi allows the application to gather additional evidence from current search results instead of relying exclusively on hardcoded information.
+
+However, **a search result is evidence, not proof of authenticity**. Results can be incomplete, outdated, manipulated, or misleading. ScamShield does not treat a number appearing in a search snippet as definitive proof that an organization owns it.
+
+SerpApi powers the search integration; it is not itself a fraud-detection authority. Actual search engines and result types depend on the implemented integration and available provider access.
+
+Without a working SerpApi configuration, ScamShield can still perform supported local registry and rule-based checks, but live search evidence and search-based discovery are unavailable.
+
+## ⚙️ How It Works
+
+A normal contact investigation follows this pipeline:
+
+1. **Input validation:** Validate the submitted query and report language using Pydantic request models.
+2. **Classification and normalization:** Identify the input as a phone number, UPI ID, URL, or brand search and normalize it for comparison.
+3. **Brand resolution:** Check the local brand directory first. If the brand is unknown, attempt discovery using available search evidence.
+4. **Evidence collection:** Query relevant SerpApi search engines and run supported domain-age and threat-intelligence checks. Independent tasks can run concurrently.
+5. **Risk assessment:** Apply deterministic rules to the available evidence, registry matches, domain characteristics, and suspicious signals.
+6. **AI-assisted explanation:** When configured, Gemini or Anthropic can help explain findings in user-friendly language. If explanation generation is unavailable, the application falls back to a built-in template.
+7. **Report generation:** Return the score, risk level, evidence, detected signals, warnings, and recommended actions.
+8. **Local statistics:** Record usage counters and recent investigation information in local JSON files.
+
+The AI explanation is intended to communicate the findings, not establish authenticity independently. The deterministic scorer remains responsible for the numeric risk assessment.
 
 ### Message and screenshot workflows
 
-**Messages:** a keyword-based extractor runs first and the optional AI may refine it. The application keeps extracted phones, URLs, and UPI IDs only when they appear verbatim in the original message, then investigates at most three contacts. The overall message score is based on the highest contact score, with a limited addition for detected tactics when the message is not classified as `NOT_SCAM_LIKE`.
+**Message analysis**
 
-**Screenshots:** the image bytes and an instruction prompt are sent together to the configured AI provider. The provider returns a JSON image description and a transcription. ScamShield investigates contact identifiers found in the transcription. If no usable phone, URL, or UPI ID is present, the UI can still show the description and transcription, but labels risk as `UNKNOWN` / not assessed. Images are not intentionally written to disk by this application; they are transmitted to the selected provider for analysis.
+ScamShield extracts candidate phone numbers, URLs, and UPI IDs from pasted text, detects common scam themes and pressure tactics, and investigates up to three extracted contacts. AI can optionally refine extraction. Extracted identifiers are retained only when they appear verbatim in the original message.
 
-## Risk score
+The overall message score is based primarily on the highest investigated contact score, with a limited adjustment for detected tactics under the implemented rules.
 
-The rule-based scorer in `app/core/scoring.py` starts at 15 points, applies signal impacts, and clamps the result to 0–100:
+**Screenshot analysis**
+
+An uploaded PNG, JPEG, or WEBP image (up to 5 MB) is sent to the configured AI provider for image description and text transcription. ScamShield then investigates usable phone numbers, URLs, and UPI IDs extracted from the transcription.
+
+If no usable contact identifier is found, the application can display the transcription and description while marking the risk as `UNKNOWN / not assessed`.
+
+Screenshot content is transmitted to the selected AI provider. Users should avoid uploading sensitive information they do not want processed by that provider.
+
+## 📊 Risk Scoring
+
+ScamShield uses a deterministic, rule-based scoring engine implemented in `app/core/scoring.py`.
+
+The score starts at **15**, incorporates applicable signals, and is clamped to a range of 0–100.
 
 | Risk level | Score |
-| --- | ---: |
+|---|---:|
 | LOW | 0–24 |
 | MEDIUM | 25–49 |
 | HIGH | 50–69 |
 | CRITICAL | 70–100 |
 
-Examples of implemented signal behavior:
+### Examples of risk signals
 
-- A contact matching a known official entry subtracts 30 points.
-- A mismatch against a claimed curated brand generally adds 25; a discovered profile mismatch adds 15 because the discovered list may be incomplete.
-- A threat-feed match adds 50.
-- A suspicious lookalike domain adds the penalty selected by the domain-similarity rules.
-- A very new domain can add 30 points if less than 30 days old, or 15 points if less than 180 days old, unless the contact already matched an official source.
-- A claimed brand’s ordinary 10-digit mobile phone can add 15 points.
-- A risky phone type (such as premium-rate or VoIP, when identified by the local phone library) can add 10 points.
-- Search poisoning, third-party-only listings, and public scam reports can add points under their own relevance rules.
-- A non-brand contact with no official match and no other positive-risk signal gets an `UNVERIFIED_CONTACT` addition of 10 points. Absence of reports is not treated as proof of safety.
+| Signal | Example score impact |
+|---|---:|
+| Match with a known official contact | −30 |
+| Mismatch against a claimed curated brand | +25 |
+| Mismatch against a discovered brand profile | +15 |
+| Threat-intelligence match | +50 |
+| Suspicious lookalike domain | Rule-dependent penalty |
+| Domain younger than 30 days | +30 |
+| Domain younger than 180 days | +15 |
+| Ordinary 10-digit mobile number presented as brand customer care | +15 |
+| Identified risky phone type, such as VoIP or premium-rate | +10 |
+| Unverified non-brand contact without another positive-risk signal | +10 |
 
-The score is **not statistically calibrated** and should not be interpreted as a percentage chance of fraud. Search availability, provider quotas, changing web results, and the completeness of the curated registry all affect results. A low-risk result is not a guarantee of safety.
+Additional rules can account for search-result poisoning, third-party-only listings, and public scam reports. Individual conditions, exclusions, and caps are determined by the scoring implementation.
 
-## Supported brands and registry verification
+These values are rule weights, not statistically learned probabilities. A score of 80 does not mean an 80% chance of fraud. Missing evidence must not be interpreted as proof of safety.
 
-The built-in directory currently includes SBI, HDFC Bank, ICICI Bank, Axis Bank, Bank of Baroda, Paytm, PhonePe, Google Pay, Airtel, and Amazon. Aliases, official domains, and contact details are maintained in `app/services/brand_directory.py`.
+## 🏦 Built-in Brand Registry
 
-Some verified helplines can additionally be loaded from `data/registry_verified.json`. `testing/verify_registry.py` checks numbers against official-domain search snippets and can optionally fetch result pages. A number “seen” in search snippets is not automatically proof of ownership; its output is advisory and must be manually checked on the organization’s own site or app.
+The built-in directory currently includes:
 
-## Run locally (Windows PowerShell)
+- State Bank of India (SBI)
+- HDFC Bank
+- ICICI Bank
+- Axis Bank
+- Bank of Baroda
+- Paytm
+- PhonePe
+- Google Pay
+- Airtel
+- Amazon
 
-Use Python and run these commands from the repository root:
+Brand aliases, registered domains, and contact information are maintained in `app/services/brand_directory.py`. Additional verified-registry entries can be loaded from `data/registry_verified.json`.
+
+Unknown brands may be investigated using live search evidence, but discovery is heuristic and can fail when results are ambiguous or incomplete.
+
+A number found in search snippets is not automatically verified. Registry verification should be confirmed against the organization's own official website or application.
+
+## 🧰 Technology Stack
+
+| Component | Technology |
+|---|---|
+| Backend | Python, FastAPI |
+| Request validation and schemas | Pydantic v2 |
+| Development server | Uvicorn |
+| Frontend | HTML, CSS, JavaScript |
+| HTTP integrations | HTTPX |
+| Phone parsing | phonenumbers |
+| Domain parsing | tldextract |
+| Live web search | SerpApi |
+| AI explanations and image analysis | Google Gemini API or Anthropic API |
+| Domain and threat intelligence | RDAP, OpenPhish, Google Safe Browsing, VirusTotal |
+| Local persistence | JSON files |
+| Testing | Python unittest-based checks and optional live integration checks |
+
+The frontend uses plain HTML, CSS, and JavaScript. No frontend package manager or compilation step is required.
+
+## 🚀 Installation and Setup
+
+### Prerequisites
+
+- Python installed on Windows or another supported operating system.
+- Git, if cloning the repository.
+- API credentials for the external integrations you want to enable.
+
+### 1. Create and activate a virtual environment
+
+Run these commands from the repository root in Windows PowerShell:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
+```
+
+### 2. Configure environment variables
+
+```powershell
 Copy-Item .env.example .env
 ```
 
-Edit `.env` and add credentials for the services you want to use, then start the development server:
+Open `.env` and configure the services you want to use.
+
+| Environment variable | Purpose | Requirement |
+|---|---|---|
+| `SERPAPI_API_KEY` | Live search, news, Maps, forums, Play Store, discovery, and supported account-usage queries | Required for live search features |
+| `GEMINI_API_KEY` | Gemini explanations, extraction refinement, and screenshot analysis | Optional |
+| `GEMINI_MODEL` | Selects the Gemini model; the configured default is `gemini-2.5-flash` | Optional |
+| `ANTHROPIC_API_KEY` | Anthropic explanations, extraction refinement, and screenshot analysis | Optional |
+| `CLAUDE_MODEL` | Selects the Anthropic model | Optional |
+| `SAFE_BROWSING_API_KEY` | Google Safe Browsing checks | Optional |
+| `VIRUSTOTAL_API_KEY` | VirusTotal domain intelligence | Optional |
+| `SERPAPI_TIMEOUT` | Search request timeout | Optional |
+| `CACHE_TTL_SECONDS` | In-memory search-cache lifetime | Optional |
+| `DAILY_SEARCH_BUDGET` | Per-process daily SerpApi request budget | Optional |
+| `RATE_LIMIT_PER_MIN` | Per-IP POST request limit per minute | Optional |
+| `DATA_DIR` | Verified-registry data directory | Optional |
+| `STATS_FILE` | Local statistics file location | Optional |
+| `HOST`, `PORT`, `LOG_LEVEL`, `ENVIRONMENT` | Server and runtime configuration | Optional |
+
+When both AI providers are configured, Anthropic takes precedence in the current integration. AI explanations are optional, but screenshot analysis requires a configured AI provider.
+
+Provider quotas, pricing, and free-tier availability can change. Check each provider's current account dashboard before relying on a particular quota.
+
+**Security:** Keep `.env` private. Never commit API keys to Git or expose them in frontend JavaScript.
+
+### 3. Start the application
 
 ```powershell
 python -m uvicorn app.main:app --reload
 ```
 
-Open the UI at `http://127.0.0.1:8000`. Do not open `static/index.html` directly as a `file://` URL; browser restrictions can block its API requests. FastAPI’s interactive API docs are available at `http://127.0.0.1:8000/docs`.
+Open the application at:
 
-## Configuration
+- Web interface: http://127.0.0.1:8000
+- Interactive API documentation: http://127.0.0.1:8000/docs
+- Health and provider status: http://127.0.0.1:8000/health
 
-Settings are loaded by `app/config.py` from environment variables and `.env`. See [.env.example](./.env.example) for the sample settings. Keep `.env` private and do not commit API credentials.
+Open the application through the FastAPI server rather than opening `static/index.html` directly with a `file://` URL.
 
-| Setting | Purpose |
-| --- | --- |
-| `SERPAPI_API_KEY` | Enables web, news, Maps, forums, Play Store, live brand discovery, and alert searches. |
-| `GEMINI_API_KEY` | Enables Gemini explanations, message extraction refinement, and multimodal screenshot description/transcription. Current default model is `gemini-2.5-flash`. |
-| `GEMINI_MODEL` | Selects the Gemini model. If a non-Flash configured model returns HTTP 429, the client retries once with `gemini-2.5-flash`; this cannot bypass project quota or billing limits. |
-| `ANTHROPIC_API_KEY` | Enables Anthropic explanations, extraction refinement, and screenshot analysis. When configured, Anthropic takes precedence over Gemini. |
-| `CLAUDE_MODEL` | Selects the Anthropic model used by the integration. |
-| `SAFE_BROWSING_API_KEY` | Enables Google Safe Browsing URL checks. |
-| `VIRUSTOTAL_API_KEY` | Enables VirusTotal domain checks. The scorer currently adds a VirusTotal hit only when at least two engines report malicious or suspicious. |
-| `SERPAPI_TIMEOUT` | SerpApi request timeout in seconds. |
-| `CACHE_TTL_SECONDS` | Lifetime of in-memory SerpApi query-cache entries. |
-| `DAILY_SEARCH_BUDGET` | Per-process daily cap on SerpApi search calls; retries also consume budget. |
-| `RATE_LIMIT_PER_MIN` | In-memory POST API request limit per client IP per minute. |
-| `DATA_DIR` | Directory used for verified-registry JSON data. |
-| `STATS_FILE` | Local JSON file used for dashboard statistics. |
-| `HOST`, `PORT`, `LOG_LEVEL`, `ENVIRONMENT` | Server binding, logging, and environment behavior. |
+## 🔌 API Reference
 
-Most integrations are optional. Without SerpApi, the app can still run its deterministic registry/rule-based checks, but it has no live search evidence. Without an AI key, explanation templates and keyword message extraction remain available; screenshot analysis requires an AI provider.
+All endpoints are served by the FastAPI application.
 
-## API reference
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/` | Serve the web interface |
+| GET | `/health` | Report application and provider configuration status |
+| GET | `/api/v1/stats` | Retrieve local statistics and supported SerpApi usage information |
+| GET | `/api/v1/alerts` | Retrieve scam-news results through SerpApi |
+| POST | `/api/v1/investigate` | Investigate one contact or brand query |
+| POST | `/api/v1/investigate/stream` | Stream investigation progress and results |
+| POST | `/api/v1/analyze-message` | Analyze pasted message text |
+| POST | `/api/v1/analyze-message/stream` | Stream message-analysis progress |
+| POST | `/api/v1/analyze-screenshot` | Analyze an uploaded screenshot |
+| POST | `/api/v1/analyze-screenshot/stream` | Stream screenshot-analysis progress |
+| POST | `/api/v1/check-app` | Search for possible app copies |
+| GET | `/api/v1/debug/serpapi` | Inspect raw SerpApi response structure during development |
 
-All endpoints are hosted by the FastAPI application:
+The investigation endpoint accepts JSON containing a `query` and optional `claimed_brand` and `language` fields. App-check requests accept `app_name` and an optional `claimed_brand`. Screenshot requests use multipart form data.
 
-| Method and path | Description |
-| --- | --- |
-| `GET /` | Serves the browser UI. |
-| `GET /health` | Reports app and provider configuration status. |
-| `GET /api/v1/stats` | Returns local stats and SerpApi usage; account information may be queried when SerpApi is configured. |
-| `GET /api/v1/alerts` | Retrieves scam-news results through SerpApi. |
-| `POST /api/v1/investigate` | Investigates one query; JSON fields include `query`, optional `claimed_brand`, and `language`. |
-| `POST /api/v1/investigate/stream` | Streaming version of one-contact investigation using Server-Sent Events. |
-| `POST /api/v1/analyze-message` | Analyzes pasted message text. |
-| `POST /api/v1/analyze-message/stream` | Streaming version of message analysis. |
-| `POST /api/v1/analyze-screenshot` | Accepts multipart fields `file` and optional `language`. |
-| `POST /api/v1/analyze-screenshot/stream` | Streaming version of screenshot analysis. |
-| `POST /api/v1/check-app` | Searches for likely app copies by name; JSON fields include `app_name` and optional `claimed_brand`. |
-| `GET /api/v1/debug/serpapi` | Development-only raw-response shape inspection; may consume a SerpApi search. |
+Request and response schemas are defined in `app/models/schemas.py`.
 
-The API request and response schemas are defined in `app/models/schemas.py`. Streaming routes emit progress, result, or error events.
+## 🧪 Testing
 
-## Project structure
-
-```text
-app/
-  main.py                 FastAPI application, routes, investigation orchestration
-  config.py               Environment-backed settings
-  core/
-    classifier.py         Input type detection
-    normalizer.py         Canonical phone, UPI, and domain forms
-    scoring.py            Rule-based score and signal generation
-    lookalike.py          Domain similarity checks
-    utils.py              Shared domain and phone normalization
-  models/
-    schemas.py            Request, response, and evidence models
-  services/
-    brand_directory.py    Curated registry and verified-data loading
-    brand_resolver.py     Search-based discovery and live snippet checks
-    official_crawler.py   Registry comparison (not a general website crawler)
-    serpapi_service.py    Search-provider client, cache, budget, evidence parsing
-    domain_intel.py       RDAP, OpenPhish, Safe Browsing, VirusTotal
-    phone_intel.py        Local phone type, carrier, and region hints
-    llm_service.py        Anthropic/Gemini provider adapter
-    claude_service.py     Explanation, text extraction, screenshot analysis
-    stats_service.py      Local JSON statistics and identifier masking
-static/
-  index.html              Responsive browser UI
-testing/
-  offline_checks.py       Network-free regression checks
-  live_checks.py          Opt-in checks that can consume SerpApi credits
-  verify_registry.py      Opt-in helpline search-result checker
-data/
-  registry_verified.json  Additional verified registry entries, when present
-```
-
-## Tests and validation
-
-Run the network-free checks:
+Run the network-free regression checks:
 
 ```powershell
 python testing\offline_checks.py
 ```
 
-The offline checks cover classification, registry matching, scoring rules, lookalike domains, screenshot processing with mocked AI responses, Gemini 429 fallback behavior, API validation, and other regression cases. The latest run recorded during this project work passed 21 tests.
+The offline suite covers areas such as:
 
-Live checks require credentials and make external requests; they can consume SerpApi credits:
+- Input classification and normalization.
+- Registry matching and risk scoring.
+- Lookalike-domain rules.
+- API validation and other regression cases.
+- Screenshot processing with mocked AI responses.
+- Gemini rate-limit fallback behavior.
+
+The latest reported offline test run for this project passed **21 tests**. Re-run the suite against your current checkout before claiming that result for a new release.
+
+### Optional live checks
 
 ```powershell
 python testing\live_checks.py
 ```
 
-Check the brand directory against official-domain search results (also uses SerpApi):
+### Optional registry verification
 
 ```powershell
 python testing\verify_registry.py
 python testing\verify_registry.py --diagnose hdfc
 ```
 
-Live results vary over time and should not be treated as fixed test fixtures. `testing/RESULTS.md` contains older live-check observations, not a guarantee of current provider or website behavior.
+Live checks and registry verification can make external requests and consume SerpApi credits. Their results can change over time and should not be treated as permanent test fixtures.
 
-## Limitations and operational notes
+## 📁 Project Structure
 
-- The risk engine uses explicit heuristics and fixed weights; it is not a trained or calibrated fraud classifier.
-- Live web data can be missing, stale, poisoned, rate-limited, or unavailable when provider quotas/timeouts occur.
-- The “live” helpline check searches snippets on listed official domains; it does not browse pages as a user or verify the number through a bank.
-- Brand discovery and fake-app detection are heuristics. A top Play Store result is only presumed likely official, not verified.
-- Phone carrier and region information can be incomplete or outdated, especially after number portability.
-- The default POST rate limiter and SerpApi cache/budget counters are process-local in-memory state. They are not distributed controls and reset when the process restarts.
-- `stats.json` stores aggregate counts and recent identifiers. Phone and UPI identifiers are masked, but URL and brand-search identifiers are not equivalently masked by the current implementation. Treat the stats file as potentially containing user-submitted data.
-- CORS currently allows all origins. Review and restrict this before exposing the service publicly.
-- Screenshot uploads are forwarded to whichever AI provider is configured. Review that provider’s terms and privacy settings before processing sensitive images.
-- API keys are secrets. Keep them in `.env` or the deployment secret manager; never place them in the frontend or commit them.
+```text
+ScamShield/
+├── app/
+│   ├── main.py
+│   ├── config.py
+│   ├── core/
+│   │   ├── classifier.py
+│   │   ├── normalizer.py
+│   │   ├── scoring.py
+│   │   ├── lookalike.py
+│   │   └── utils.py
+│   ├── models/
+│   │   └── schemas.py
+│   └── services/
+│       ├── brand_directory.py
+│       ├── brand_resolver.py
+│       ├── official_crawler.py
+│       ├── serpapi_service.py
+│       ├── domain_intel.py
+│       ├── phone_intel.py
+│       ├── llm_service.py
+│       ├── claude_service.py
+│       └── stats_service.py
+├── static/
+│   └── index.html
+├── data/
+│   └── registry_verified.json
+├── testing/
+│   ├── offline_checks.py
+│   ├── live_checks.py
+│   └── verify_registry.py
+├── requirements.txt
+├── .env.example
+└── README.md
+```
 
-## Safety guidance
+The verified registry JSON file is optional when no additional entries are required. Runtime statistics are stored in the configured statistics file.
 
-If money was lost or banking credentials were shared in India, contact the bank through its official channel and call **1930** promptly. Do not share OTPs, UPI PINs, passwords, or remote-access codes with callers. Use the official government reporting channels listed in the app’s recommendations.
+## ⚠️ Limitations and Security Considerations
+
+- **Heuristic scoring:** The risk engine has not been statistically calibrated. False positives and false negatives are possible.
+- **Search reliability:** Live evidence depends on search-provider availability, result quality, quotas, and timeouts.
+- **Brand verification:** Search snippets and third-party listings cannot conclusively establish ownership of a contact number or domain.
+- **Brand coverage:** The built-in directory is limited; discovery of other brands depends on available search evidence.
+- **Phone intelligence:** Carrier and regional hints may be incomplete or outdated because of number portability and data limitations.
+- **Threat intelligence:** External services can return incomplete or conflicting findings. A lack of threat-feed matches does not prove safety.
+- **Fake-app detection:** App title and developer-name similarities are indicators, not definitive proof of impersonation.
+- **Privacy:** Screenshot content is transmitted to the configured AI provider. Review the provider's data-handling policies before processing sensitive images.
+- **Local statistics:** Phone and UPI identifiers are masked, but URL and brand-search identifiers may be stored without equivalent masking in the current implementation. Treat the statistics file as potentially sensitive.
+- **Rate limiting:** The current in-memory limiter and search budget are process-local, reset after restarts, and are not distributed production controls.
+- **CORS:** The current configuration allows all origins. Restrict allowed origins before public deployment.
+- **Production readiness:** Authentication, persistent distributed rate limiting, hardened deployment settings, privacy controls, and broader accuracy evaluation should be reviewed before exposing the service publicly.
+
+## 🆘 Safety Guidance
+
+If you suspect fraud:
+
+1. Do not share OTPs, UPI PINs, passwords, or remote-access codes.
+2. Verify contact details using the organization's official application or website, accessed independently.
+3. If you have lost money or shared banking credentials in India, contact your bank through its official channel and call **1930** promptly.
+4. Use the official National Cyber Crime Reporting Portal at https://cybercrime.gov.in/.
+5. Use official government services, including Sanchar Saathi, when relevant.
+
+Never rely on a ScamShield score alone when deciding whether to transfer money or disclose sensitive information.
+
+## 🤖 AI Tools Used
+
+- **Google Gemini API:** Optional in-app explanations, message-extraction refinement, and screenshot description/transcription.
+- **Anthropic API:** Optional alternative for in-app explanations, message-extraction refinement, and screenshot analysis.
+- **AI-assisted development:** Claude was used for development assistance and code review.
+
+AI output is supplementary. ScamShield's rule-based scorer determines the numeric risk score, while live search and threat-intelligence integrations provide supporting evidence when available.
+
+## 🌱 Future Improvements
+
+Potential areas for future development include:
+
+- Expanding the curated registry using manually reviewed official sources.
+- Improving privacy-preserving statistics and data retention controls.
+- Adding broader automated tests for live investigation workflows.
+- Evaluating false-positive and false-negative rates against a labeled dataset.
+- Improving search-evidence provenance and confidence explanations.
+- Strengthening production security, deployment configuration, and abuse prevention.
+
+## 📜 Project Disclaimer
+
+ScamShield India is designed to assist with preliminary fraud-risk assessment and cybersecurity awareness. It does not guarantee that a contact is legitimate or fraudulent, and it is not affiliated with or endorsed by the banks, payment providers, search engines, or threat-intelligence providers mentioned above.
+
+Always independently verify important contact details before making payments or sharing sensitive information.
