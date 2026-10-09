@@ -138,6 +138,14 @@ class OfflineChecks(unittest.TestCase):
         self.assertTrue(mask("PHONE", "+919876543210").endswith("10"))
         self.assertNotIn("9876", mask("PHONE", "+919876543210"))
 
+    def test_registry_matching_accepts_formatted_numbers_and_bounds_short_codes(self) -> None:
+        from testing.verify_registry import number_is_present
+
+        self.assertTrue(number_is_present("Contact us: 1800-425-3800", "18004253800"))
+        self.assertTrue(number_is_present("Call us at 1800 1234", "18001234"))
+        self.assertTrue(number_is_present("Airtel support: (121)", "121"))
+        self.assertFalse(number_is_present("Reference 91210 is unrelated", "121"))
+
 
 if __name__ == "__main__":
     print(f"Offline checks (no network). Repository: {PROJECT_ROOT}")

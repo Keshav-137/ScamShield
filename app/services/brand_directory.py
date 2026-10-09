@@ -62,9 +62,11 @@ BRAND_DIRECTORY: Dict[str, OfficialBrandProfile] = {
         brand_id="bob", display_name="Bank of Baroda",
         aliases=["bank of baroda", "bankofbaroda", "baroda"],
         official_domains=["bankofbaroda.bank.in", "bankofbaroda.com"],
-        official_helplines=["18005700", "18002584455", "18001024455", "18001027788"],
+        official_helplines=["18005700", "18001034568", "1800220400", "18005000",
+                           "18002584455", "18001024455", "18001027788"],
+        verified_helplines=["18005700", "18001034568", "1800220400", "18005000"],
         official_upi_handles=[],
-        notes="Helplines seen only on third-party sites; NOT yet verified on the bank's own site.",
+        notes="Official-site verification confirmed 18005700 plus 18001034568, 1800220400 and 18005000 on Bank of Baroda's own domains; remaining entries still need manual confirmation.",
     ),
     "paytm": OfficialBrandProfile(
         brand_id="paytm", display_name="Paytm Payments Bank", aliases=["paytm", "paytm payments bank", "one97"],
