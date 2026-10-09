@@ -100,6 +100,7 @@ class OfficialContacts(BaseModel):
     helplines: List[str]
     upi_handles: List[str]
     notes: Optional[str] = None
+    source: str = "curated"
 
 
 # ---------------------------------------------------------------------------
@@ -136,3 +137,17 @@ class InvestigationReport(BaseModel):
     recommended_actions: List[str] = Field(default_factory=list)
     
     language: Language
+
+
+class MessageAnalysisRequest(BaseModel):
+    message: str = Field(..., min_length=5, max_length=3000)
+    language: Language = Language.EN
+
+
+class MessageAnalysisResponse(BaseModel):
+    brand: Optional[str] = None
+    scam_type: str
+    tactics: List[str] = Field(default_factory=list)
+    overall_risk_level: RiskLevel
+    overall_risk_score: int = Field(ge=0, le=100)
+    reports: List[InvestigationReport] = Field(default_factory=list)

@@ -5,8 +5,8 @@ Detects domain typosquatting, suspicious TLDs, and brand impersonation.
 
 from typing import Tuple, Optional
 import Levenshtein
-import tldextract
-from app.services.brand_directory import BRAND_DIRECTORY, lookup_brand
+from app.core.utils import extract
+from app.services.brand_directory import BRAND_DIRECTORY
 
 
 SUSPICIOUS_TLDS = {".xyz", ".top", ".info", ".online", ".site", ".live", ".work", ".click", ".buzz", ".tk", ".ml"}
@@ -18,7 +18,7 @@ def evaluate_domain_similarity(target_domain: str, claimed_brand_id: Optional[st
     Returns:
         (is_lookalike: bool, risk_penalty: int, explanation: str)
     """
-    ext = tldextract.extract(target_domain)
+    ext = extract(target_domain)
     target_clean = ext.domain.lower()
     tld = f".{ext.suffix.lower()}"
 
@@ -27,7 +27,7 @@ def evaluate_domain_similarity(target_domain: str, claimed_brand_id: Optional[st
 
     for profile in profiles:
         for official_domain in profile.official_domains:
-            off_ext = tldextract.extract(official_domain)
+            off_ext = extract(official_domain)
             official_clean = off_ext.domain.lower()
 
             # Exact match to verified official domain

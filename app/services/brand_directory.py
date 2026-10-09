@@ -15,6 +15,7 @@ class OfficialBrandProfile(BaseModel):
     official_helplines: List[str]
     official_upi_handles: List[str]
     notes: Optional[str] = None
+    source: str = "curated"
 
 
 BRAND_DIRECTORY: Dict[str, OfficialBrandProfile] = {
@@ -22,7 +23,7 @@ BRAND_DIRECTORY: Dict[str, OfficialBrandProfile] = {
         brand_id="sbi",
         display_name="State Bank of India",
         aliases=["sbi", "state bank of india", "state bank", "yono"],
-        official_domains=["sbi.co.in", "onlinesbi.sbi", "bank.sbi"],
+        official_domains=["sbi.co.in", "onlinesbi.sbi", "bank.sbi", "sbi.bank.in"],
         official_helplines=["18001234", "18002100", "1800112211", "18004253800", "08026599990"],
         official_upi_handles=["sbi", "oksbi"],
         notes="India's largest public sector bank. Prime target for search poisoning."
@@ -49,7 +50,7 @@ BRAND_DIRECTORY: Dict[str, OfficialBrandProfile] = {
         brand_id="axis",
         display_name="Axis Bank",
         aliases=["axis", "axis bank"],
-        official_domains=["axisbank.com"],
+        official_domains=["axisbank.com", "axis.bank.in"],
         official_helplines=["18604195555", "18605005555"],
         official_upi_handles=["axisbank", "okaxis"],
     ),
@@ -104,12 +105,36 @@ BRAND_DIRECTORY: Dict[str, OfficialBrandProfile] = {
     )
 }
 
+_ALIAS_PATTERNS = [
+    (profile, re.compile(rf"(?<![a-z0-9]){re.escape(alias)}(?![a-z0-9])"))
+    for profile in BRAND_DIRECTORY.values()
+    for alias in profile.aliases
+]
+
+
+def register_profile(profile: OfficialBrandProfile) -> None:
+    """Register a discovered profile and make its aliases available to lookups."""
+    BRAND_DIRECTORY[profile.brand_id] = profile
+    _ALIAS_PATTERNS[:] = [
+        (existing, pattern)
+        for existing, pattern in _ALIAS_PATTERNS
+        if existing.brand_id != profile.brand_id
+    ]
+    _ALIAS_PATTERNS.extend(
+        (
+            profile,
+            re.compile(rf"(?<![a-z0-9]){re.escape(alias)}(?![a-z0-9])"),
+        )
+        for alias in profile.aliases
+    )
+
 
 def lookup_brand(query_text: str) -> Optional[OfficialBrandProfile]:
-    """Finds matching brand based on search query or claimed name."""
+    """Find a brand by a whole-word alias match."""
+    if not query_text:
+        return None
     query_lower = query_text.lower()
-    for profile in BRAND_DIRECTORY.values():
-        for alias in profile.aliases:
-            if alias in query_lower:
-                return profile
+    for profile, pattern in _ALIAS_PATTERNS:
+        if pattern.search(query_lower):
+            return profile
     return None
