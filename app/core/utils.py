@@ -1,26 +1,3 @@
-"""Shared input and domain helpers."""
-
-import re
-
-import tldextract
-
-extract = tldextract.TLDExtract(
-    suffix_list_urls=(),
-    extra_suffixes=["bank.in", "fin.in"],
-)
-
-
-def local_digits(value: str) -> str:
-    """Return digits without India's country code or a leading trunk zero."""
-    digits = re.sub(r"\D", "", value or "")
-    if digits.startswith("91") and len(digits) >= 12:
-        digits = digits[2:]
-    return digits.lstrip("0")
-
-
-def registered_domain(host_or_url: str) -> str:
-    """Return the registered domain for a host or URL."""
-    return extract(host_or_url).registered_domain.lower()
 """app/core/utils.py — Shared helpers."""
 
 import re
@@ -28,6 +5,14 @@ import tldextract
 
 # Offline: bundled public-suffix snapshot; .bank.in added for Indian banks.
 extract = tldextract.TLDExtract(suffix_list_urls=(), extra_suffixes=["bank.in", "fin.in"])
+
+
+def reg_domain(ext) -> str:
+    """Registered domain, compatible with old and new tldextract versions."""
+    val = getattr(ext, "top_domain_under_public_suffix", None)
+    if val is None:
+        val = ext.registered_domain
+    return (val or "").lower()
 
 
 def local_digits(value: str) -> str:
@@ -39,4 +24,4 @@ def local_digits(value: str) -> str:
 
 
 def registered_domain(host_or_url: str) -> str:
-    return extract(host_or_url).registered_domain.lower()
+    return reg_domain(extract(host_or_url))

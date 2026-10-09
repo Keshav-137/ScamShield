@@ -15,7 +15,7 @@ from app.core.classifier import classify_input
 from app.core.lookalike import evaluate_domain_similarity
 from app.core.normalizer import normalize_input
 from app.core.scoring import calculate_risk_score
-from app.models.schemas import InputType, RiskLevel
+from app.models.schemas import EvidenceItem, EvidenceSourceType, InputType, RiskLevel
 from app.services.brand_directory import lookup_brand
 from app.services.claude_service import claude_service
 from app.services.official_crawler import official_crawler_service
@@ -87,6 +87,25 @@ class OfflineChecks(unittest.TestCase):
             with self.subTest(domain=domain, brand=brand):
                 got_flag, got_penalty, _ = evaluate_domain_similarity(domain, brand)
                 self.assertEqual((got_flag, got_penalty), (flag, penalty))
+
+    def test_restricted_registry_is_trusted(self) -> None:
+        self.assertEqual(evaluate_domain_similarity("hdfc.bank.in", "hdfc")[:2], (False, 0))
+
+    def test_review_site_subdomain_is_not_poisoning(self) -> None:
+        ev = [EvidenceItem(source_type=EvidenceSourceType.GOOGLE_SEARCH, title="SBI reviews", snippet="",
+                           url="https://sbi-bank.pissedconsumer.com/customer-service.html")]
+        _, _, _, signals, _ = calculate_risk_score(ni_for("SBI customer care"), ev, lookup_brand("SBI"))
+        self.assertNotIn("POISONED_SEARCH_RESULTS", signal_names(signals))
+
+    def test_mobile_number_posing_as_customer_care(self) -> None:
+        _, _, _, signals, _ = calculate_risk_score(ni_for("9876543210", "SBI"), [], lookup_brand("SBI"))
+        self.assertIn("MOBILE_NUMBER_AS_CUSTOMER_CARE", signal_names(signals))
+
+    def test_threat_feed_hit_raises_score(self) -> None:
+        score, _, _, signals, _ = calculate_risk_score(
+            ni_for("random-site.xyz"), [], None, None, ["OpenPhish community feed"])
+        self.assertGreaterEqual(score, 50)
+        self.assertIn("THREAT_FEED_MATCH", signal_names(signals))
 
     def test_api_validation_and_offline_warning(self) -> None:
         from app.main import app

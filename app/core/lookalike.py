@@ -4,7 +4,7 @@ import re
 from typing import Optional, Tuple
 from app.core.utils import extract, registered_domain
 from app.services.brand_directory import BRAND_DIRECTORY
-
+from app.core.utils import extract, reg_domain, registered_domain
 
 def calc_distance(s1: str, s2: str) -> int:
     """Pure-Python Levenshtein (no C-extension needed on Windows)."""
@@ -24,6 +24,7 @@ def calc_distance(s1: str, s2: str) -> int:
 SUSPICIOUS_TLDS = {".xyz", ".top", ".info", ".online", ".site", ".live", ".work", ".click", ".buzz", ".tk", ".ml"}
 HIGH_RISK_KEYWORDS = ["care", "helpline", "support", "kyc", "update", "refund", "login", "secure", "portal", "agent"]
 GENERIC_LABELS = {"bank", "pay", "www", "online", "app"}  # words, not brand names
+RESTRICTED_SUFFIXES = {"bank.in", "fin.in", "gov.in", "nic.in"}  # only verified institutions can register
 
 
 def _tokens(text: str) -> set:
@@ -34,7 +35,7 @@ def evaluate_domain_similarity(target: str, claimed_brand_id: Optional[str] = No
     """target: host, domain or full URL. Returns (is_lookalike, risk_penalty, explanation)."""
     ext = extract(target)
     label = ext.domain.lower()
-    reg = ext.registered_domain.lower()
+    reg = reg_domain(ext) 
     if not label:
         return False, 0, "Could not parse domain."
     tld = f".{ext.suffix.lower()}" if ext.suffix else ""
@@ -44,6 +45,9 @@ def evaluate_domain_similarity(target: str, claimed_brand_id: Optional[str] = No
         for d in p.official_domains:
             if registered_domain(d) == reg:
                 return False, 0, f"Verified match with official domain '{d}'."
+
+    if ext.suffix.lower() in RESTRICTED_SUFFIXES:
+        return False, 0, f"'.{ext.suffix}' is a restricted registry (only verified institutions can register)."
 
     label_tokens = _tokens(label)
     sub_tokens = _tokens(ext.subdomain)

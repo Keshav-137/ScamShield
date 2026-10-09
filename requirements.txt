@@ -6,3 +6,4 @@ pydantic-settings>=2.5
 anthropic>=0.40
 phonenumbers>=8.13
 tldextract>=5.1
+python-multipart>=0.0.9

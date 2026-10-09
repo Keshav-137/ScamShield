@@ -1,7 +1,7 @@
 """app/services/official_crawler.py — Compare a contact against the official brand registry."""
 
 from typing import Optional, Tuple
-from app.core.utils import local_digits, registered_domain
+from app.core.utils import extract, local_digits, registered_domain
 from app.models.schemas import InputType, NormalizedInput
 from app.services.brand_directory import BRAND_DIRECTORY, OfficialBrandProfile
 
@@ -25,6 +25,10 @@ class OfficialCrawlerService:
             for dom in profile.official_domains:
                 if reg and reg == registered_domain(dom):
                     return True, f"Domain matches verified official domain of {name} ({dom})."
+            ext = extract(ni.extracted_host or reg)
+            if ext.suffix.lower() in {"bank.in", "fin.in"} and \
+                    ext.domain.lower() in {a.replace(" ", "") for a in profile.aliases}:
+                return True, f"'{reg}' is on the restricted .{ext.suffix} registry and matches {name}."
             return False, f"Domain '{reg}' is NOT an official domain of {name}."
 
         if ni.input_type == InputType.UPI:
