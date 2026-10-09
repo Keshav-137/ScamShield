@@ -159,6 +159,10 @@
       background: #14532d
     }
 
+    .UNKNOWN {
+      background: #374151
+    }
+
     .MEDIUM {
       background: #854d0e
     }
@@ -392,6 +396,9 @@
     function messageHTML(d) {
       return `<div class="card"><span class="badge ${d.overall_risk_level}">${d.overall_risk_level} · ${d.overall_risk_score}/100</span>
     <p><b>Scam type:</b> ${esc(d.scam_type)} ${d.brand ? `· <b>Claims to be:</b> ${esc(d.brand)}` : ""}</p>
+    ${d.image_description ? `<p><b>Image description:</b> ${esc(d.image_description)}</p>` : ""}
+    ${d.transcribed_text ? `<details><summary>Text read from image</summary><p>${esc(d.transcribed_text)}</p></details>` : ""}
+    ${d.risk_assessment_note ? `<p class="warn">${esc(d.risk_assessment_note)}</p>` : ""}
     <div class="chips">${d.tactics.map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div></div>` + d.reports.map(reportHTML).join("");
     }
     function share() {

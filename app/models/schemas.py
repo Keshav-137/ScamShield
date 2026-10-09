@@ -13,6 +13,7 @@ class InputType(str, Enum):
 
 
 class RiskLevel(str, Enum):
+    UNKNOWN = "UNKNOWN"
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
@@ -115,3 +116,6 @@ class MessageAnalysisResponse(BaseModel):
     overall_risk_level: RiskLevel
     overall_risk_score: int
     reports: List[InvestigationReport]
+    image_description: Optional[str] = None
+    transcribed_text: Optional[str] = None
+    risk_assessment_note: Optional[str] = None
