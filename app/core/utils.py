@@ -4,7 +4,10 @@ import re
 
 import tldextract
 
-extract = tldextract.TLDExtract(suffix_list_urls=())
+extract = tldextract.TLDExtract(
+    suffix_list_urls=(),
+    extra_suffixes=["bank.in", "fin.in"],
+)
 
 
 def local_digits(value: str) -> str:

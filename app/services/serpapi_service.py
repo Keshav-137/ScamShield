@@ -15,18 +15,28 @@ class SerpApiService:
     def __init__(self):
         self.api_key = settings.SERPAPI_API_KEY
 
+    @property
+    def enabled(self) -> bool:
+        return bool(self.api_key)
+
     async def _execute_query(self, params: Dict[str, Any]) -> Dict[str, Any]:
         if not self.api_key:
             return {}
-        params["api_key"] = self.api_key
-        params["gl"] = "in"  # Geolocation: India
-        params["hl"] = "en"  # Host language: English
+        request_params = {
+            **params,
+            "api_key": self.api_key,
+            "gl": "in",
+            "hl": "en",
+        }
 
         async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(self.BASE_URL, params=params)
-            if resp.status_code == 200:
-                return resp.json()
-            return {}
+            resp = await client.get(self.BASE_URL, params=request_params)
+            resp.raise_for_status()
+            return resp.json()
+
+    async def raw(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        """Return raw SerpApi JSON for discovery and structured result parsing."""
+        return await self._execute_query(params)
 
     async def search_google(self, query: str, num: int = 5) -> List[EvidenceItem]:
         params = {"engine": "google", "q": query, "num": num}

@@ -5,7 +5,8 @@ Official source comparison logic.
 
 from typing import Tuple, Optional
 from app.core.utils import local_digits
-from app.services.brand_directory import OfficialBrandProfile
+from app.models.schemas import InputType, NormalizedInput
+from app.services.brand_directory import BRAND_DIRECTORY, OfficialBrandProfile
 
 
 class OfficialCrawlerService:
@@ -36,10 +37,24 @@ class OfficialCrawlerService:
         # Compare domain
         clean_domain = value.lower().strip()
         for dom in profile.official_domains:
-            if clean_domain == dom.lower():
+            if clean_domain == dom.lower() or clean_domain.endswith(f".{dom.lower()}"):
                 return True, f"Domain matches verified official domain for {profile.display_name}."
 
         return False, f"Contact was NOT found on {profile.display_name}'s official directory."
+
+    @classmethod
+    def find_brand_by_contact(
+        cls, normalized: NormalizedInput
+    ) -> Optional[OfficialBrandProfile]:
+        if normalized.input_type not in (InputType.PHONE, InputType.URL):
+            return None
+        for profile in BRAND_DIRECTORY.values():
+            matches, _ = cls.verify_against_official_profile(
+                normalized.normalized_value, profile
+            )
+            if matches:
+                return profile
+        return None
 
 
 official_crawler_service = OfficialCrawlerService()
