@@ -230,16 +230,43 @@ async def analyze_text(message: str, language: Language, emit: Emit = _noop) -> 
 async def analyze_image(data: bytes, content_type: str, language: Language, emit: Emit = _noop):
     await emit("ocr", "Reading the screenshot…")
     try:
-        text = await claude_service.read_image_text(data, content_type)
-    except RuntimeError as exc:
-        raise HTTPException(status_code=503, detail=str(exc))
+        image_analysis = await claude_service.analyze_image(data, content_type)
     except Exception as exc:
-        log.warning("Image read failed: %r", exc)
-        raise HTTPException(status_code=502, detail="Could not read the screenshot.")
-    if len(text) < 5:
-        raise HTTPException(status_code=422, detail="No readable text found in the image.")
+        if (getattr(exc, "status_code", None) == 429
+                or re.search(r"\bHTTP\s+429\b", str(exc), re.IGNORECASE)):
+            raise HTTPException(
+                status_code=503,
+                detail="The configured AI provider has no available image-analysis quota. "
+                       "Check its quota and billing settings, or configure another provider.",
+            )
+        if isinstance(exc, RuntimeError):
+            raise HTTPException(status_code=503, detail=str(exc))
+        log.warning("Image analysis failed: %r", exc)
+        raise HTTPException(status_code=502, detail="Could not analyze the screenshot.")
+
+    text = image_analysis["transcription"]
     stats_service.bump("actions", "screenshot")
-    return await analyze_text(text[:3000], language, emit)
+    try:
+        result = await analyze_text(text[:3000], language, emit)
+    except HTTPException as exc:
+        if exc.status_code != 422:
+            raise
+        return MessageAnalysisResponse(
+            scam_type="NOT_ASSESSED",
+            overall_risk_level=RiskLevel.UNKNOWN,
+            overall_risk_score=0,
+            reports=[],
+            image_description=image_analysis["image_description"],
+            transcribed_text=text[:3000],
+            risk_assessment_note=(
+                "No phone number, website, or UPI ID could be extracted from the image. "
+                "The image is described above, but scam risk was not assessed."
+            ),
+        )
+    return result.model_copy(update={
+        "image_description": image_analysis["image_description"],
+        "transcribed_text": text[:3000],
+    })
 
 
 # ---------------------------------------------------------------- live progress (Server-Sent Events)

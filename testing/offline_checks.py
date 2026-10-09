@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 import unittest
+from unittest.mock import AsyncMock
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -15,7 +16,7 @@ from app.core.classifier import classify_input
 from app.core.lookalike import evaluate_domain_similarity
 from app.core.normalizer import normalize_input
 from app.core.scoring import calculate_risk_score
-from app.models.schemas import EvidenceItem, EvidenceSourceType, InputType, RiskLevel
+from app.models.schemas import EvidenceItem, EvidenceSourceType, InputType, Language, RiskLevel
 from app.services.brand_directory import lookup_brand
 from app.services.claude_service import claude_service
 from app.services.official_crawler import official_crawler_service
@@ -145,6 +146,68 @@ class OfflineChecks(unittest.TestCase):
         self.assertTrue(number_is_present("Call us at 1800 1234", "18001234"))
         self.assertTrue(number_is_present("Airtel support: (121)", "121"))
         self.assertFalse(number_is_present("Reference 91210 is unrelated", "121"))
+
+    def test_image_analysis_sends_image_and_returns_description_and_transcription(self) -> None:
+        import asyncio
+        from types import SimpleNamespace
+
+        from app.services.claude_service import claude_service
+
+        original_client = claude_service.client
+        fake_client = SimpleNamespace(complete=AsyncMock(return_value=(
+            '{"image_description":"A screenshot of a text message.","transcription":"Update KYC now."}'
+        )))
+        claude_service.client = fake_client
+        try:
+            result = asyncio.run(claude_service.analyze_image(b"image-bytes", "image/png"))
+        finally:
+            claude_service.client = original_client
+
+        self.assertEqual(result["image_description"], "A screenshot of a text message.")
+        self.assertEqual(result["transcription"], "Update KYC now.")
+        self.assertEqual(fake_client.complete.call_args.kwargs["image"], (b"image-bytes", "image/png"))
+        self.assertTrue(fake_client.complete.call_args.kwargs["json_mode"])
+
+    def test_gemini_quota_error_is_explained_to_screenshot_user(self) -> None:
+        import asyncio
+        from fastapi import HTTPException
+        from app.main import analyze_image
+        from app.services.claude_service import claude_service
+
+        original = claude_service.analyze_image
+        claude_service.analyze_image = AsyncMock(side_effect=RuntimeError("Gemini HTTP 429: quota exceeded"))
+        try:
+            with self.assertRaises(HTTPException) as raised:
+                asyncio.run(analyze_image(b"image-bytes", "image/png", Language.EN))
+        finally:
+            claude_service.analyze_image = original
+
+        self.assertEqual(raised.exception.status_code, 503)
+        self.assertIn("quota", raised.exception.detail.lower())
+
+    def test_image_without_contact_text_still_returns_description(self) -> None:
+        import asyncio
+        from unittest.mock import patch
+
+        from fastapi import HTTPException
+        from app.main import analyze_image
+        from app.services.claude_service import claude_service
+
+        async def no_contacts(*args, **kwargs):
+            raise HTTPException(status_code=422, detail="No contact found.")
+
+        with patch.object(
+            claude_service, "analyze_image",
+            AsyncMock(return_value={
+                "image_description": "A screenshot of a suspicious-looking message.",
+                "transcription": "Urgent account update required.",
+            }),
+        ), patch("app.main.analyze_text", side_effect=no_contacts):
+            result = asyncio.run(analyze_image(b"image-bytes", "image/png", Language.EN))
+
+        self.assertEqual(result.overall_risk_level.value, "UNKNOWN")
+        self.assertEqual(result.image_description, "A screenshot of a suspicious-looking message.")
+        self.assertIn("risk was not assessed", result.risk_assessment_note)
 
 
 if __name__ == "__main__":
