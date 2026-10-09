@@ -3,8 +3,11 @@ app/main.py
 FastAPI application entrypoint for ScamShield India.
 """
 
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from app.models.schemas import InvestigateRequest, InvestigationReport
 from app.core.classifier import classify_input
@@ -28,6 +31,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+
+
+@app.get("/", include_in_schema=False)
+async def index():
+    return FileResponse(STATIC_DIR / "index.html")
 
 
 @app.get("/health")
