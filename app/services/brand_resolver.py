@@ -6,7 +6,7 @@ import re
 from collections import Counter
 from typing import Dict, Optional, Set
 
-from app.core.utils import local_digits, registered_domain
+from app.core.utils import extract, local_digits, registered_domain
 from app.services.brand_directory import (
     OfficialBrandProfile,
     lookup_brand,
@@ -14,7 +14,7 @@ from app.services.brand_directory import (
 )
 from app.services.serpapi_service import serpapi_service
 
-log = logging.getLogger("scamshield.brand_resolver")
+log = logging.getLogger("scamshield.resolver")
 
 GENERIC = re.compile(
     r"\b(customer|care|helpline|help|line|number|numbers|toll|free|contact|"
@@ -106,8 +106,19 @@ class BrandResolver:
                 del votes[domain]
         if not votes:
             return None
-        domain, consensus_score = votes.most_common(1)[0]
-        if consensus_score < 3:
+        domain, score = votes.most_common(1)[0]
+        compact = name.replace(" ", "")
+        label = extract(domain).domain.lower()
+        if label and (label in compact or compact in label):
+            score += 1
+        log.info(
+            "Brand discovery %r -> %s (score %s, votes %s)",
+            name,
+            domain,
+            score,
+            dict(votes),
+        )
+        if score < 3:
             return None
 
         search_data = await serpapi_service.raw(
