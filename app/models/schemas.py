@@ -75,6 +75,7 @@ class OfficialContacts(BaseModel):
     helplines: List[str]
     verified_helplines: List[str] = Field(default_factory=list)  # confirmed on the brand's own website
     live_helplines: List[str] = Field(default_factory=list)
+    live_checked: bool = False
     upi_handles: List[str]
     notes: Optional[str] = None
     source: str = "curated"

@@ -43,6 +43,39 @@ class BrandResolver:
     def __init__(self):
         self._cache: Dict[str, Optional[OfficialBrandProfile]] = {}
 
+    async def live_verify(self, profile: OfficialBrandProfile) -> None:
+        """Check search snippets from the brand's registered domains for listed helplines."""
+        profile.live_checked = False
+        profile.live_helplines = []
+        if not serpapi_service.enabled or not profile.official_domains:
+            return
+
+        sites = " OR ".join(f"site:{domain}" for domain in profile.official_domains)
+        query = f"({sites}) customer care helpline contact number"
+        try:
+            data = await serpapi_service.raw({"engine": "google", "q": query, "num": 10})
+        except Exception as exc:
+            log.warning("Live helpline verification failed for %s: %r", profile.display_name, exc)
+            return
+
+        rows = data.get("organic_results", [])
+        domains = {registered_domain(domain) for domain in profile.official_domains}
+        snippets = []
+        for row in rows:
+            url = row.get("link", "")
+            if registered_domain(url) in domains:
+                snippets.append(f"{row.get('title', '')} {row.get('snippet', '')}")
+        if not snippets:
+            return
+
+        found = set().union(*(extract_numbers(text) for text in snippets))
+        listed = {
+            local_digits(number)
+            for number in profile.official_helplines + profile.verified_helplines
+        }
+        profile.live_helplines = sorted(found & listed)
+        profile.live_checked = True
+
     async def resolve(self, text: Optional[str]) -> Optional[OfficialBrandProfile]:
         name = extract_brand_name(text or "")
         if len(name) < 3:

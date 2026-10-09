@@ -78,6 +78,15 @@ class LLM:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 model = _gemini["model"] or settings.GEMINI_MODEL
                 r = await self._gemini_call(client, model, body)
+                fallback_model = "gemini-2.5-flash"
+                if r.status_code == 429 and model != fallback_model:
+                    log.warning(
+                        "Gemini model %r returned HTTP 429; retrying once with %r",
+                        model, fallback_model,
+                    )
+                    r = await self._gemini_call(client, fallback_model, body)
+                    if r.status_code == 200:
+                        model = fallback_model
                 if r.status_code == 404:
                     new_model = await self._discover_model(client)
                     if new_model and new_model != model:

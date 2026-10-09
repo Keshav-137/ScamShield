@@ -5,14 +5,53 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>ScamShield India</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap"
+    rel="stylesheet">
   <style>
     :root {
-      --bg: #0d1220;
-      --card: #161d2f;
-      --tx: #e8ecf4;
-      --mut: #8b96ad;
-      --ln: #26304a;
-      --ac: #3b6cff
+      --bg: #f4f7f6;
+      --card: #fff;
+      --tx: #10201c;
+      --mut: #5d6f69;
+      --ln: #dde6e2;
+      --ac: #0b6b57;
+      --ac2: #0e8a70;
+      --soft: #e8f3ef;
+      --in: #f8fbfa;
+      --low: #12875a;
+      --lowbg: #e3f5ec;
+      --med: #a16207;
+      --medbg: #fcf1d6;
+      --high: #c2410c;
+      --highbg: #fde8dc;
+      --crit: #b91c1c;
+      --critbg: #fde3e3;
+      --sh: 0 1px 2px rgba(16, 32, 28, .06), 0 8px 24px -12px rgba(16, 32, 28, .14)
+    }
+
+    @media(prefers-color-scheme:dark) {
+      :root {
+        --bg: #0b1411;
+        --card: #121e1a;
+        --tx: #e6f0ec;
+        --mut: #8da39b;
+        --ln: #223630;
+        --ac: #34c79f;
+        --ac2: #5ed9b6;
+        --soft: #16302a;
+        --in: #0e1916;
+        --low: #4ade9d;
+        --lowbg: #123326;
+        --med: #f5c451;
+        --medbg: #3a2e0f;
+        --high: #fb9a6a;
+        --highbg: #3b2112;
+        --crit: #f87171;
+        --critbg: #3d1717;
+        --sh: none
+      }
     }
 
     * {
@@ -23,74 +62,134 @@
       margin: 0;
       background: var(--bg);
       color: var(--tx);
-      font: 15px/1.5 system-ui, sans-serif
+      font: 15px/1.6 "Plus Jakarta Sans", "Noto Sans Devanagari", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased
+    }
+
+    .wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 16px
     }
 
     header {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 18px 16px 0
+      padding: 22px 0 0
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--ac);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 22px
     }
 
     h1 {
       margin: 0;
-      font-size: 22px
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.01em
+    }
+
+    .tag {
+      color: var(--mut);
+      font-size: 13.5px
     }
 
     .chips {
       display: flex;
       gap: 6px;
       flex-wrap: wrap;
-      margin: 6px 0
+      margin-left: auto
     }
 
     .chip {
       font-size: 12px;
-      padding: 2px 9px;
+      padding: 3px 10px;
       border-radius: 99px;
-      background: #222c45;
-      color: var(--mut)
+      background: var(--soft);
+      color: var(--mut);
+      font-weight: 600
     }
 
     .chip.ok {
-      color: #86efac
+      color: var(--low)
     }
 
     .chip.no {
-      color: #fca5a5
+      color: var(--crit)
     }
 
     nav {
       display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-top: 10px
+      gap: 4px;
+      margin-top: 18px;
+      border-bottom: 1px solid var(--ln);
+      overflow-x: auto;
+      align-items: center
     }
 
     nav button {
-      background: #1c2540;
-      border: 1px solid var(--ln);
-      color: var(--mut)
+      background: none;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      border-radius: 0;
+      color: var(--mut);
+      padding: 10px 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer
+    }
+
+    nav button:hover {
+      color: var(--tx)
     }
 
     nav button.on {
-      background: var(--ac);
-      color: #fff;
-      border-color: var(--ac)
+      color: var(--ac);
+      border-bottom-color: var(--ac)
+    }
+
+    nav select {
+      margin-left: auto;
+      margin-bottom: 4px;
+      padding: 6px 8px;
+      width: auto
     }
 
     main {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 6px 16px 40px
+      padding: 20px 0 56px
     }
 
     .card {
       background: var(--card);
       border: 1px solid var(--ln);
-      border-radius: 12px;
-      padding: 16px;
-      margin-top: 14px
+      border-radius: 14px;
+      padding: 20px;
+      margin-top: 16px;
+      box-shadow: var(--sh)
+    }
+
+    .lead {
+      margin: 0 0 14px;
+      font-size: 17px;
+      font-weight: 700
+    }
+
+    .sub {
+      margin: -8px 0 14px;
+      color: var(--mut);
+      font-size: 13.5px
     }
 
     input,
@@ -98,46 +197,93 @@
     select,
     button {
       font: inherit;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid var(--ln);
-      background: #0b101d;
+      background: var(--in);
       color: var(--tx);
-      padding: 10px
+      padding: 11px 13px
     }
 
     input,
     textarea {
       width: 100%;
-      margin-bottom: 8px
+      margin-bottom: 10px
     }
 
     textarea {
-      min-height: 110px;
+      min-height: 130px;
       resize: vertical
     }
 
-    button {
+    :focus-visible {
+      outline: 3px solid var(--ac2);
+      outline-offset: 2px
+    }
+
+    button.p,
+    #go,
+    #gom,
+    #gos,
+    #goa {
       background: var(--ac);
+      color: #fff;
       border: 0;
+      font-weight: 700;
       cursor: pointer;
-      font-weight: 600;
-      color: #fff
+      padding: 12px 22px
+    }
+
+    button.p:hover,
+    #go:hover,
+    #gom:hover,
+    #gos:hover,
+    #goa:hover {
+      background: var(--ac2)
+    }
+
+    :root[data-dark] #go {
+      color: #04120d
+    }
+
+    @media(prefers-color-scheme:dark) {
+
+      #go,
+      #gom,
+      #gos,
+      #goa {
+        color: #04120d
+      }
     }
 
     button:disabled {
-      opacity: .5;
+      opacity: .55;
       cursor: wait
     }
 
-    .row {
+    .ex {
+      margin-top: 14px;
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center
     }
 
-    .row>* {
-      flex: 1;
-      min-width: 140px
+    .ex b {
+      font-size: 12.5px;
+      color: var(--mut);
+      font-weight: 600;
+      margin-right: 2px
+    }
+
+    .ex button {
+      background: var(--soft);
+      border: 0;
+      color: var(--ac);
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 99px;
+      cursor: pointer
     }
 
     .hide {
@@ -145,103 +291,368 @@
     }
 
     .warn {
-      color: #fbbf24
+      color: var(--med)
     }
 
-    .badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 99px;
-      font-weight: 700
-    }
-
-    .LOW {
-      background: #14532d
-    }
-
-    .UNKNOWN {
-      background: #374151
-    }
-
-    .MEDIUM {
-      background: #854d0e
-    }
-
-    .HIGH {
-      background: #9a3412
-    }
-
-    .CRITICAL {
-      background: #991b1b
-    }
-
-    h3 {
-      margin: 14px 0 4px;
-      font-size: 12px;
-      color: var(--mut);
-      text-transform: uppercase;
-      letter-spacing: .05em
-    }
-
-    ul {
-      margin: 0;
-      padding-left: 18px
-    }
-
-    a {
-      color: #8fb0ff
-    }
-
-    small,
-    .mut {
+    .mut,
+    small {
       color: var(--mut)
     }
 
-    .ev {
-      border-top: 1px solid var(--ln);
-      padding: 8px 0;
-      word-break: break-word
+    a {
+      color: var(--ac)
+    }
+
+    /* progress */
+    #progress {
+      border-left: 4px solid var(--ac)
     }
 
     #log {
       list-style: none;
       padding: 0;
       margin: 0;
-      font: 12px/1.7 ui-monospace, monospace;
+      font-size: 13px;
       color: var(--mut)
     }
 
-    #log .ok {
-      color: #86efac
+    #log li {
+      padding: 3px 0
     }
 
-    #log .bad {
-      color: #fca5a5
+    #log li.cur::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      margin-right: 8px;
+      border: 2px solid var(--ac);
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: sp .8s linear infinite
     }
 
+    #log li.done::before {
+      content: "✓ ";
+      color: var(--low);
+      font-weight: 700
+    }
+
+    #log li.ok {
+      color: var(--low);
+      font-weight: 700
+    }
+
+    #log li.bad {
+      color: var(--crit);
+      font-weight: 700
+    }
+
+    @keyframes sp {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+      #log li.cur::before {
+        animation: none
+      }
+    }
+
+    /* verdict */
+    .verdict {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      padding: 18px;
+      border-radius: 12px;
+      margin: -4px -4px 6px
+    }
+
+    .verdict.LOW {
+      background: var(--lowbg)
+    }
+
+    .verdict.MEDIUM {
+      background: var(--medbg)
+    }
+
+    .verdict.HIGH {
+      background: var(--highbg)
+    }
+
+    .verdict.CRITICAL {
+      background: var(--critbg)
+    }
+
+    .verdict.UNKNOWN {
+      background: var(--soft)
+    }
+
+    .gauge {
+      --c: var(--low);
+      --p: 0;
+      flex: none;
+      width: 92px;
+      height: 92px;
+      border-radius: 50%;
+      background: conic-gradient(var(--c) calc(var(--p)*1%), rgba(128, 128, 128, .22) 0);
+      display: grid;
+      place-items: center
+    }
+
+    .gauge span {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--card);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 24px;
+      line-height: 1
+    }
+
+    .gauge small {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center
+    }
+
+    .LOW .gauge {
+      --c: var(--low)
+    }
+
+    .MEDIUM .gauge {
+      --c: var(--med)
+    }
+
+    .HIGH .gauge {
+      --c: var(--high)
+    }
+
+    .CRITICAL .gauge {
+      --c: var(--crit)
+    }
+
+    .verdict h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800
+    }
+
+    .LOW h2 {
+      color: var(--low)
+    }
+
+    .MEDIUM h2 {
+      color: var(--med)
+    }
+
+    .HIGH h2 {
+      color: var(--high)
+    }
+
+    .CRITICAL h2 {
+      color: var(--crit)
+    }
+
+    .verdict p {
+      margin: 2px 0 0;
+      font-size: 13.5px;
+      color: var(--mut)
+    }
+
+    .summary {
+      font-size: 16px;
+      margin: 14px 0
+    }
+
+    .sec {
+      margin-top: 18px
+    }
+
+    .sec h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-weight: 700
+    }
+
+    .sec ul {
+      margin: 0;
+      padding-left: 20px
+    }
+
+    .sec li {
+      margin: 3px 0
+    }
+
+    .act {
+      background: var(--soft);
+      border-radius: 12px;
+      padding: 14px 16px
+    }
+
+    .act li::marker {
+      color: var(--ac)
+    }
+
+    .contact {
+      border: 1px solid var(--ln);
+      border-radius: 12px;
+      padding: 14px 16px
+    }
+
+    .contact dl {
+      margin: 8px 0 0;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 14px;
+      font-size: 13.5px
+    }
+
+    .contact dt {
+      color: var(--mut)
+    }
+
+    .contact dd {
+      margin: 0;
+      word-break: break-word
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 11px;
+      border-radius: 99px;
+      font-weight: 700;
+      font-size: 13px
+    }
+
+    .badge.LOW {
+      background: var(--lowbg);
+      color: var(--low)
+    }
+
+    .badge.MEDIUM {
+      background: var(--medbg);
+      color: var(--med)
+    }
+
+    .badge.HIGH {
+      background: var(--highbg);
+      color: var(--high)
+    }
+
+    .badge.CRITICAL {
+      background: var(--critbg);
+      color: var(--crit)
+    }
+
+    .badge.UNKNOWN {
+      background: var(--soft);
+      color: var(--mut)
+    }
+
+    details {
+      border-top: 1px solid var(--ln);
+      margin-top: 16px;
+      padding-top: 12px
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 14px
+    }
+
+    .sig {
+      display: flex;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--ln);
+      font-size: 13.5px
+    }
+
+    .sig i {
+      flex: none;
+      font-style: normal;
+      font-weight: 700;
+      min-width: 38px;
+      text-align: right
+    }
+
+    .sig i.up {
+      color: var(--crit)
+    }
+
+    .sig i.dn {
+      color: var(--low)
+    }
+
+    .ev {
+      padding: 9px 0;
+      border-bottom: 1px solid var(--ln);
+      word-break: break-word;
+      font-size: 13.5px
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 16px
+    }
+
+    .row button {
+      background: var(--soft);
+      color: var(--ac);
+      border: 0;
+      font-weight: 700;
+      cursor: pointer
+    }
+
+    .chiprow {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px
+    }
+
+    .chiprow .chip {
+      background: var(--soft);
+      color: var(--ac)
+    }
+
+    /* dashboard */
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px
+      gap: 12px
     }
 
     .stat {
-      background: #0f1526;
+      background: var(--card);
       border: 1px solid var(--ln);
-      border-radius: 10px;
-      padding: 12px
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 13px;
+      color: var(--mut)
     }
 
     .stat b {
-      font-size: 24px;
-      display: block
+      font-size: 26px;
+      display: block;
+      color: var(--tx);
+      line-height: 1.2
     }
 
     .bar {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin: 3px 0;
+      margin: 5px 0;
       font-size: 13px
     }
 
@@ -257,6 +668,16 @@
       color: var(--mut)
     }
 
+    .card h3.t {
+      margin: 16px 0 6px;
+      font-size: 13px;
+      color: var(--mut)
+    }
+
+    .card h3.t:first-child {
+      margin-top: 0
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -265,96 +686,138 @@
 
     td,
     th {
-      padding: 5px 6px;
+      padding: 7px 6px;
       border-top: 1px solid var(--ln);
       text-align: left
     }
 
-    .ex button {
-      background: #222c45;
-      padding: 5px 10px;
-      font-weight: 400;
-      margin: 2px;
-      font-size: 13px
+    .files {
+      font-size: 13px;
+      color: var(--mut);
+      margin-top: 6px
+    }
+
+    footer {
+      text-align: center;
+      color: var(--mut);
+      font-size: 12.5px;
+      padding: 0 0 30px
+    }
+
+    @media(max-width:520px) {
+      .verdict {
+        flex-direction: column;
+        text-align: center
+      }
+
+      .chips {
+        margin-left: 0
+      }
     }
   </style>
 </head>
 
 <body>
-  <header>
-    <h1>🛡️ ScamShield India</h1>
-    <div class="mut">Verify numbers, UPI IDs, links, messages and apps against live search evidence.</div>
-    <div class="chips" id="health"></div>
-    <nav id="nav">
-      <button data-t="check" class="on">Check</button><button data-t="msg">Message</button>
-      <button data-t="shot">Screenshot</button><button data-t="app">Fake app</button><button
-        data-t="dash">Dashboard</button>
-      <select id="lang" style="margin-left:auto;flex:0">
-        <option value="en">English</option>
-        <option value="hi">हिन्दी</option>
-        <option value="mr">मराठी</option>
-      </select>
-    </nav>
-  </header>
-  <main>
-    <section id="t-check" class="tab card">
-      <input id="q" placeholder="Phone · UPI ID · website · 'SBI customer care'">
-      <input id="b" placeholder="Brand it claims to be (optional)">
-      <button id="go">Investigate</button>
-      <div class="ex" id="ex"></div>
-    </section>
-    <section id="t-msg" class="tab card hide">
-      <textarea id="m" placeholder="Paste the SMS / WhatsApp message here"></textarea>
-      <button id="gom">Analyze message</button>
-    </section>
-    <section id="t-shot" class="tab card hide">
-      <input id="f" type="file" accept="image/png,image/jpeg,image/webp">
-      <button id="gos">Analyze screenshot</button>
-      <div class="mut" style="margin-top:6px">Needs a Gemini or Claude key. The image is sent to that AI provider and is
-        not stored by this app.</div>
-    </section>
-    <section id="t-app" class="tab card hide">
-      <input id="an" placeholder="App name, e.g. SBI YONO">
-      <input id="ab" placeholder="Brand (optional)">
-      <button id="goa">Check app</button>
-    </section>
-    <section id="t-dash" class="tab hide">
-      <div id="dash"></div>
-    </section>
-    <div id="progress" class="card hide">
-      <ul id="log"></ul>
-    </div>
-    <div id="out"></div>
-  </main>
+  <div class="wrap">
+    <header>
+      <div class="top">
+        <div class="logo" aria-hidden="true">🛡️</div>
+        <div>
+          <h1>ScamShield India</h1>
+          <div class="tag">Check a number, link, UPI ID, message or app before you trust it.</div>
+        </div>
+        <div class="chips" id="health"></div>
+      </div>
+      <nav id="nav" aria-label="Tools">
+        <button data-t="check" class="on">Check</button><button data-t="msg">Message</button>
+        <button data-t="shot">Screenshot</button><button data-t="app">Fake app</button><button
+          data-t="dash">Dashboard</button>
+        <select id="lang" aria-label="Language">
+          <option value="en">English</option>
+          <option value="hi">हिन्दी</option>
+          <option value="mr">मराठी</option>
+        </select>
+      </nav>
+    </header>
+    <main>
+      <section id="t-check" class="tab card">
+        <p class="lead">What do you want to check?</p>
+        <p class="sub">Paste a phone number, UPI ID, website, or type a company name like "SBI customer care".</p>
+        <input id="q" placeholder="e.g. 1800 1234, sbi.care@okaxis, or sbi-helpline.xyz">
+        <input id="b" placeholder="Who does it claim to be? (optional)">
+        <button id="go">Check now</button>
+        <div class="ex" id="ex"><b>Try:</b></div>
+      </section>
+      <section id="t-msg" class="tab card hide">
+        <p class="lead">Got a suspicious SMS or WhatsApp?</p>
+        <p class="sub">Paste the whole message. We find every number, link and UPI ID in it and check each one.</p>
+        <textarea id="m" placeholder="Paste the message here"></textarea>
+        <button id="gom">Check message</button>
+      </section>
+      <section id="t-shot" class="tab card hide">
+        <p class="lead">Upload a screenshot</p>
+        <p class="sub">PNG, JPEG or WEBP, up to 5 MB. The image is sent to the AI provider to read the text and is not
+          stored by this app.</p>
+        <input id="f" type="file" accept="image/png,image/jpeg,image/webp">
+        <button id="gos">Check screenshot</button>
+      </section>
+      <section id="t-app" class="tab card hide">
+        <p class="lead">Is this app genuine?</p>
+        <p class="sub">We search Google Play for copies that use a brand's name.</p>
+        <input id="an" placeholder="App name, e.g. SBI YONO">
+        <input id="ab" placeholder="Brand (optional)">
+        <button id="goa">Check app</button>
+      </section>
+      <section id="t-dash" class="tab hide">
+        <div id="dash"></div>
+      </section>
+      <div id="progress" class="card hide" aria-live="polite">
+        <ul id="log"></ul>
+      </div>
+      <div id="out"></div>
+    </main>
+    <footer>If money was lost, call <b>1930</b> right away. Always confirm numbers on the brand's own website or app.
+    </footer>
+  </div>
   <script>
     const $ = id => document.getElementById(id);
     const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     const safe = u => /^https?:\/\//i.test(u || "") ? esc(u) : "#";
-    const list = (t, a) => a && a.length ? `<h3>${t}</h3><ul>${a.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
+    const list = (t, a, cls = "") => a && a.length ? `<div class="sec ${cls}"><h3>${t}</h3><ul>${a.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
+    const VERDICT = { UNKNOWN: ["Not assessed", "There was not enough information to assess risk."], LOW: ["Looks low risk", "No strong warning signs found. Still confirm on the official site."], MEDIUM: ["Be careful", "Some warning signs. Verify before you act."], HIGH: ["Likely a scam", "Several red flags. Do not share details or pay."], CRITICAL: ["Very likely a scam", "Strong evidence of fraud. Stop and do not respond."] };
     let busy = false, dashTimer = null, last = null;
 
     function show(tab) {
       document.querySelectorAll(".tab").forEach(s => s.classList.toggle("hide", s.id !== "t-" + tab));
       document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("on", b.dataset.t === tab));
-      $("out").innerHTML = ""; $("progress").classList.add("hide");
-      clearInterval(dashTimer);
-      if (tab === "dash") { loadDash(); dashTimer = setInterval(loadDash, 20000); }
+      $("out").innerHTML = ""; $("progress").classList.add("hide"); clearInterval(dashTimer);
+      if (tab === "dash") { loadDash(); dashTimer = setInterval(loadDash, 20000) }
     }
     document.querySelectorAll("#nav button").forEach(b => b.onclick = () => show(b.dataset.t));
     ["SBI customer care helpline", "sbi-helpline-support.xyz", "1800 1234", "Zomato customer care number", "sbi.care@okaxis"].forEach(x => {
       const b = document.createElement("button"); b.textContent = x; b.onclick = () => { $("q").value = x; $("go").click() }; $("ex").appendChild(b)
     });
-
     function setBusy(v) { ["go", "gom", "gos", "goa"].forEach(i => $(i).disabled = v) }
 
     async function run(path, init) {
       if (busy) return null; busy = true; setBusy(true);
       const log = $("log"); log.innerHTML = ""; $("out").innerHTML = ""; $("progress").classList.remove("hide");
       const t0 = performance.now();
-      const add = (m, c = "") => { const li = document.createElement("li"); li.className = c; li.textContent = `${((performance.now() - t0) / 1000).toFixed(1)}s  ${m}`; log.appendChild(li) };
+      const add = (m, c = "") => {
+        log.querySelectorAll(".cur").forEach(l => { l.className = "done" });
+        const li = document.createElement("li"); li.className = c || "cur"; li.textContent = c ? m : `${m}  (${((performance.now() - t0) / 1000).toFixed(1)}s)`; log.appendChild(li)
+      };
       try {
         const r = await fetch(path, init);
-        if (!r.ok) { let d = ""; try { d = (await r.json()).detail } catch { } throw new Error(d || ("HTTP " + r.status)) }
+        const readError = async response => {
+          const body = (await response.text()).trim();
+          if (!body) return `HTTP ${response.status}`;
+          try { const data = JSON.parse(body); return data.detail || data.message || body } catch { }
+          return body.length > 240 ? body.slice(0, 240) + "…" : body;
+        };
+        if (!r.ok) throw new Error(await readError(r));
+        if (!(r.headers.get("content-type") || "").toLowerCase().includes("text/event-stream"))
+          throw new Error(`Expected a progress stream, but the server returned: ${await readError(r)}`);
         const rd = r.body.getReader(), dec = new TextDecoder(); let buf = "", result = null;
         for (; ;) {
           const { done, value } = await rd.read(); if (done) break;
@@ -365,41 +828,48 @@
             const ev = JSON.parse(chunk.slice(6));
             if (ev.type === "progress") add(ev.message);
             else if (ev.type === "result") result = ev.data;
-            else if (ev.type === "error") throw new Error(ev.message);
+            else if (ev.type === "error") throw new Error(ev.message)
           }
         }
         if (!result) throw new Error("No result received");
-        add("Done", "ok"); return result;
-      } catch (e) { add("Error: " + e.message, "bad"); $("out").innerHTML = `<div class="card warn">${esc(e.message)}</div>`; return null }
+        add(`Done in ${((performance.now() - t0) / 1000).toFixed(1)}s`, "ok"); return result;
+      } catch (e) { add("Could not finish: " + e.message, "bad"); $("out").innerHTML = `<div class="card warn"><b>Something went wrong.</b><br>${esc(e.message)}<br><small>Check your connection and try again.</small></div>`; return null }
       finally { busy = false; setBusy(false) }
     }
-    const post = (o) => ({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(o) });
+    const post = o => ({ method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(o) });
 
+    function verdictHTML(level, score, sub) {
+      const v = VERDICT[level] || ["Result", ""];
+      const shownScore = level === "UNKNOWN" ? "—" : score;
+      return `<div class="verdict ${level}"><div class="gauge" style="--p:${level === "UNKNOWN" ? 0 : score}"><span>${shownScore}</span></div>
+  <div><h2>${v[0]}</h2><p>${v[1]}</p>${sub ? `<p>${sub}</p>` : ""}</div></div>`;
+    }
     function reportHTML(d) {
       const oc = d.official_contacts;
       return `<div class="card">
-    <span class="badge ${d.risk_level}">${d.risk_level} · ${d.risk_score}/100</span>
-    <small> confidence ${esc(d.confidence)} · ${esc(d.input_type)} · ${esc(d.normalized_value)}</small>
-    <p>${esc(d.summary)}</p>
-    ${d.warnings.map(w => `<p class="warn">⚠ ${esc(w)}</p>`).join("")}
-    ${list("Risk factors", d.risk_factors)}${list("What to do", d.recommended_actions)}${list("Not verified", d.unverified_points)}
-    ${oc ? `<h3>Official contacts: ${esc(oc.display_name)} <small>(${oc.source === "discovered" ? "discovered via live search" : "curated list"})</small></h3>
-      <ul><li>Websites: ${esc(oc.domains.join(", "))}</li>
-      <li>Helplines (list): ${esc(oc.helplines.join(", ") || "none on file")}</li>
-      <li>Seen on official site just now: ${oc.live_checked ? esc(oc.live_helplines.join(", ") || "no numbers found in snippets") : "not checked"}</li></ul>
-      <small>Always confirm numbers on the brand's own website or app.</small>`: ""}
-    <h3>Why (signals)</h3><ul>${d.signals.map(s => `<li><b>${esc(s.signal_name)}</b> (${s.score_impact > 0 ? "+" : ""}${s.score_impact}): ${esc(s.description)}</li>`).join("")}</ul>
-    <h3>Evidence (${d.evidence.length})</h3>
-    ${d.evidence.map(e => `<div class="ev"><small>${esc(e.source_type)}${e.relevance_notes ? " · " + esc(e.relevance_notes) : ""}</small><br><a href="${safe(e.url)}" target="_blank" rel="noopener noreferrer">${esc(e.title || e.url)}</a><br><small>${esc(e.snippet)}</small></div>`).join("")}
-    <p><button onclick="share()">Share summary</button></p></div>`;
+  ${verdictHTML(d.risk_level, d.risk_score, `${esc(d.input_type)}: <b>${esc(d.normalized_value)}</b> · confidence ${esc(d.confidence)}`)}
+  <p class="summary">${esc(d.summary)}</p>
+  ${d.warnings.map(w => `<p class="warn">⚠ ${esc(w)}</p>`).join("")}
+  ${list("What to do now", d.recommended_actions, "act")}
+  ${list("Why it looks risky", d.risk_factors)}
+  ${list("We could not confirm", d.unverified_points)}
+  ${oc ? `<div class="sec"><h3>Official contacts for ${esc(oc.display_name)}</h3><div class="contact"><small>${oc.source === "discovered" ? "Found through live search" : "From our checked list"}</small>
+    <dl><dt>Websites</dt><dd>${esc(oc.domains.join(", "))}</dd>
+    <dt>Helplines</dt><dd>${esc(oc.helplines.join(", ") || "none on file")}</dd>
+    <dt>Seen on official site</dt><dd>${oc.live_checked ? esc(oc.live_helplines.join(", ") || "no numbers found in snippets") : "not checked"}</dd></dl></div></div>` : ""}
+  <details><summary>How we decided (${d.signals.length} signals)</summary>
+    ${d.signals.map(s => `<div class="sig"><i class="${s.score_impact > 0 ? "up" : s.score_impact < 0 ? "dn" : ""}">${s.score_impact > 0 ? "+" : ""}${s.score_impact}</i><div><b>${esc(s.signal_name)}</b><br><small>${esc(s.description)}</small></div></div>`).join("")}</details>
+  <details><summary>Evidence from the web (${d.evidence.length})</summary>
+    ${d.evidence.map(e => `<div class="ev"><small>${esc(e.source_type)}${e.relevance_notes ? " · " + esc(e.relevance_notes) : ""}</small><br><a href="${safe(e.url)}" target="_blank" rel="noopener noreferrer">${esc(e.title || e.url)}</a><br><small>${esc(e.snippet)}</small></div>`).join("") || "<p class='mut'>No evidence found.</p>"}</details>
+  <div class="row"><button onclick="share()">Share summary</button><button onclick="window.print()">Print / save PDF</button></div></div>`;
     }
     function messageHTML(d) {
-      return `<div class="card"><span class="badge ${d.overall_risk_level}">${d.overall_risk_level} · ${d.overall_risk_score}/100</span>
-    <p><b>Scam type:</b> ${esc(d.scam_type)} ${d.brand ? `· <b>Claims to be:</b> ${esc(d.brand)}` : ""}</p>
-    ${d.image_description ? `<p><b>Image description:</b> ${esc(d.image_description)}</p>` : ""}
-    ${d.transcribed_text ? `<details><summary>Text read from image</summary><p>${esc(d.transcribed_text)}</p></details>` : ""}
-    ${d.risk_assessment_note ? `<p class="warn">${esc(d.risk_assessment_note)}</p>` : ""}
-    <div class="chips">${d.tactics.map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div></div>` + d.reports.map(reportHTML).join("");
+      return `<div class="card">${verdictHTML(d.overall_risk_level, d.overall_risk_score, `Scam type: <b>${esc(d.scam_type)}</b>${d.brand ? ` · Claims to be: <b>${esc(d.brand)}</b>` : ""}`)}
+  ${d.image_description ? `<div class="sec"><h3>Image description</h3><p>${esc(d.image_description)}</p></div>` : ""}
+  ${d.transcribed_text ? `<details><summary>Text read from image</summary><p>${esc(d.transcribed_text)}</p></details>` : ""}
+  ${d.risk_assessment_note ? `<p class="warn">${esc(d.risk_assessment_note)}</p>` : ""}
+  ${d.tactics.length ? `<div class="sec"><h3>Pressure tactics used</h3><div class="chiprow">${d.tactics.map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div></div>` : ""}
+  ${d.reports.length ? `<p class="mut" style="margin:14px 0 0">Details for each contact found in the message are below.</p>` : ""}</div>` + d.reports.map(reportHTML).join("");
     }
     function share() {
       if (!last) return;
@@ -407,68 +877,71 @@
       const t = `ScamShield India: ${d.risk_level} risk (${d.risk_score}/100). ${d.summary || ""}\nIf money was lost, call 1930.`;
       navigator.share ? navigator.share({ text: t }).catch(() => { }) : navigator.clipboard.writeText(t).then(() => alert("Copied"));
     }
-
+    const done = (d, fn) => { if (d) { last = d; $("out").innerHTML = fn(d); $("out").scrollIntoView({ behavior: "smooth", block: "start" }) } };
     $("go").onclick = async () => {
-      const q = $("q").value.trim(); if (q.length < 3) return;
-      const d = await run("/api/v1/investigate/stream", post({ query: q, claimed_brand: $("b").value.trim() || null, language: $("lang").value }));
-      if (d) { last = d; $("out").innerHTML = reportHTML(d) }
+      const q = $("q").value.trim(); if (q.length < 3) { $("q").focus(); return }
+      done(await run("/api/v1/investigate/stream", post({ query: q, claimed_brand: $("b").value.trim() || null, language: $("lang").value })), reportHTML)
     };
     $("gom").onclick = async () => {
-      const m = $("m").value.trim(); if (m.length < 5) return;
-      const d = await run("/api/v1/analyze-message/stream", post({ message: m, language: $("lang").value }));
-      if (d) { last = d; $("out").innerHTML = messageHTML(d) }
+      const m = $("m").value.trim(); if (m.length < 5) { $("m").focus(); return }
+      done(await run("/api/v1/analyze-message/stream", post({ message: m, language: $("lang").value })), messageHTML)
     };
     $("gos").onclick = async () => {
       const f = $("f").files[0]; if (!f) return;
       const fd = new FormData(); fd.append("file", f); fd.append("language", $("lang").value);
-      const d = await run("/api/v1/analyze-screenshot/stream", { method: "POST", body: fd });
-      if (d) { last = d; $("out").innerHTML = messageHTML(d) }
+      done(await run("/api/v1/analyze-screenshot/stream", { method: "POST", body: fd }), messageHTML)
     };
     $("goa").onclick = async () => {
-      const n = $("an").value.trim(); if (n.length < 2) return; setBusy(true); $("out").innerHTML = "";
+      const n = $("an").value.trim(); if (n.length < 2) { $("an").focus(); return } setBusy(true); $("out").innerHTML = "";
       try {
         const r = await fetch("/api/v1/check-app", post({ app_name: n, claimed_brand: $("ab").value.trim() || null }));
-        const d = await r.json(); if (!r.ok) throw new Error(d.detail || r.status);
-        const row = a => `<li><a href="${safe(a.link)}" target="_blank" rel="noopener noreferrer">${esc(a.title)}</a> <small>${esc(a.developer || "developer unknown")}</small></li>`;
-        $("out").innerHTML = `<div class="card"><b>${esc(d.verdict)}</b>
-      ${d.presumed_official ? `<h3>Presumed official (top result)</h3><ul>${row(d.presumed_official)}</ul>` : ""}
-      ${(d.possible_clones || []).length ? `<h3>Possible clones</h3><ul>${d.possible_clones.map(row).join("")}</ul>` : ""}
-      <p><small>${esc(d.note)}</small></p></div>`;
+        const body = (await r.text()).trim();
+        let d;
+        try { d = body ? JSON.parse(body) : {} } catch {
+          throw new Error(body ? `Server returned an unreadable response: ${body.slice(0, 240)}` : `HTTP ${r.status}`);
+        }
+        if (!r.ok) throw new Error(d.detail || d.message || `HTTP ${r.status}`);
+        const row = a => `<li><a href="${safe(a.link)}" target="_blank" rel="noopener noreferrer">${esc(a.title)}</a> <small>by ${esc(a.developer || "unknown developer")}</small></li>`;
+        const bad = d.verdict === "POSSIBLE_CLONES_FOUND";
+        $("out").innerHTML = `<div class="card"><span class="badge ${bad ? "HIGH" : "LOW"}">${bad ? "Possible copies found" : d.verdict === "NO_RESULTS" ? "No results" : "No copies found"}</span>
+    ${d.presumed_official ? `<div class="sec"><h3>Most likely the real app (top result)</h3><ul>${row(d.presumed_official)}</ul></div>` : ""}
+    ${(d.possible_clones || []).length ? `<div class="sec"><h3>Possible copies. Do not install.</h3><ul>${d.possible_clones.map(row).join("")}</ul></div>` : ""}
+    <p><small>${esc(d.note)}</small></p></div>`;
       } catch (e) { $("out").innerHTML = `<div class="card warn">${esc(e.message)}</div>` }
       setBusy(false);
     };
 
-    const COL = { LOW: "#22c55e", MEDIUM: "#eab308", HIGH: "#f97316", CRITICAL: "#ef4444" };
+    const COL = { LOW: "var(--low)", MEDIUM: "var(--med)", HIGH: "var(--high)", CRITICAL: "var(--crit)" };
     function bars(o, colors) {
       const e = Object.entries(o || {}).sort((a, b) => b[1] - a[1]).slice(0, 6), mx = Math.max(1, ...e.map(x => x[1]));
       return e.length ? e.map(([k, v]) => `<div class="bar"><span>${esc(k)}</span><i style="width:${Math.round(v / mx * 100)}%;background:${(colors && colors[k]) || "var(--ac)"}"></i>${v}</div>`).join("") : "<div class='mut'>No data yet</div>";
     }
+    const chips = h => [["Search", h.serpapi_configured], ["AI: " + (h.llm_provider || "off"), !!h.llm_provider], ["Safe Browsing", h.safe_browsing_configured], ["VirusTotal", h.virustotal_configured]]
+      .map(([n, v]) => `<span class="chip ${v ? "ok" : "no"}">${esc(n)} ${v ? "✓" : "✗"}</span>`).join("");
     async function loadDash() {
       try {
         const [s, a, h] = await Promise.all([fetch("/api/v1/stats").then(r => r.json()), fetch("/api/v1/alerts").then(r => r.json()), fetch("/health").then(r => r.json())]);
         const st = s.stats, sp = s.serpapi, ac = sp.account || {};
         const risky = (st.by_level.HIGH || 0) + (st.by_level.CRITICAL || 0);
         const left = ac.total_searches_left ?? ac.plan_searches_left;
-        $("health").innerHTML = [["SerpApi", h.serpapi_configured], ["AI: " + (h.llm_provider || "off"), !!h.llm_provider], ["Safe Browsing", h.safe_browsing_configured], ["VirusTotal", h.virustotal_configured]]
-          .map(([n, v]) => `<span class="chip ${v ? "ok" : "no"}">${esc(n)} ${v ? "✓" : "✗"}</span>`).join("");
+        $("health").innerHTML = chips(h);
         $("dash").innerHTML = `
-    <div class="grid" style="margin-top:14px">
+    <div class="grid" style="margin-top:16px">
       <div class="stat"><b>${st.total}</b>checks done</div>
-      <div class="stat"><b>${st.total ? Math.round(risky / st.total * 100) : 0}%</b>high / critical</div>
-      <div class="stat"><b>${left ?? "–"}</b>SerpApi credits left</div>
-      <div class="stat"><b>${sp.searches_today}/${sp.daily_budget}</b>searches today (cap)</div>
-      <div class="stat"><b>${sp.cache_hits}</b>served from cache</div>
-    </div>
-    <div class="card"><h3>Risk levels</h3>${bars(st.by_level, COL)}<h3>Input types</h3>${bars(st.by_type)}
-      <h3>Scam types in pasted messages</h3>${bars(st.by_scam_type)}<h3>Most checked brands</h3>${bars(st.brands)}
-      <h3>Most common signals</h3>${bars(st.signals)}</div>
-    <div class="card"><h3>Latest scam alerts (live Google News via SerpApi)</h3>
-      ${(a.items || []).map(n => `<div class="ev"><a href="${safe(n.link)}" target="_blank" rel="noopener noreferrer">${esc(n.title)}</a><br><small>${esc(n.source)} ${esc(n.date || "")}</small></div>`).join("") || "<div class='mut'>No alerts (check SerpApi key).</div>"}</div>
-    <div class="card"><h3>Recent checks (identifiers masked)</h3><table><tr><th>Time</th><th>Type</th><th>Item</th><th>Brand</th><th>Risk</th></tr>
-      ${st.recent.map(r => `<tr><td>${new Date(r.ts * 1000).toLocaleTimeString()}</td><td>${esc(r.type)}</td><td>${esc(r.id)}</td><td>${esc(r.brand)}</td><td><span class="badge ${r.level}">${r.score}</span></td></tr>`).join("")}</table></div>`;
+      <div class="stat"><b>${st.total ? Math.round(risky / st.total * 100) : 0}%</b>high or critical</div>
+      <div class="stat"><b>${left ?? "–"}</b>search credits left</div>
+      <div class="stat"><b>${sp.searches_today}/${sp.daily_budget}</b>searches today</div>
+      <div class="stat"><b>${sp.cache_hits}</b>served from cache</div></div>
+    <div class="card"><h3 class="t">Risk levels</h3>${bars(st.by_level, COL)}<h3 class="t">What was checked</h3>${bars(st.by_type)}
+      <h3 class="t">Scam types in messages</h3>${bars(st.by_scam_type)}<h3 class="t">Most checked brands</h3>${bars(st.brands)}
+      <h3 class="t">Most common signals</h3>${bars(st.signals)}</div>
+    <div class="card"><h3 class="t">Latest scam news</h3>
+      ${(a.items || []).map(n => `<div class="ev"><a href="${safe(n.link)}" target="_blank" rel="noopener noreferrer">${esc(n.title)}</a><br><small>${esc(n.source)} ${esc(n.date || "")}</small></div>`).join("") || "<div class='mut'>No alerts (check search key).</div>"}</div>
+    <div class="card"><h3 class="t">Recent checks (details hidden)</h3><div style="overflow-x:auto"><table><tr><th>Time</th><th>Type</th><th>Item</th><th>Brand</th><th>Risk</th></tr>
+      ${st.recent.map(r => `<tr><td>${new Date(r.ts * 1000).toLocaleTimeString()}</td><td>${esc(r.type)}</td><td>${esc(r.id)}</td><td>${esc(r.brand)}</td><td><span class="badge ${r.level}">${r.score}</span></td></tr>`).join("")}</table></div></div>`;
       } catch (e) { $("dash").innerHTML = `<div class="card warn">Dashboard error: ${esc(e.message)}</div>` }
     }
-    fetch("/health").then(r => r.json()).then(h => { $("health").innerHTML = [["SerpApi", h.serpapi_configured], ["AI: " + (h.llm_provider || "off"), !!h.llm_provider]].map(([n, v]) => `<span class="chip ${v ? "ok" : "no"}">${esc(n)} ${v ? "✓" : "✗"}</span>`).join("") });
+    fetch("/health").then(r => r.json()).then(h => { $("health").innerHTML = chips(h) });
   </script>
 </body>
 

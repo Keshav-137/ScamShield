@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     VIRUSTOTAL_API_KEY: str = ""
 
     CLAUDE_MODEL: str = "claude-sonnet-5-5"
-    GEMINI_MODEL: str = "gemini-3.8-flash"
+    GEMINI_MODEL: str = "gemini-2.5-flash"
 
     SERPAPI_TIMEOUT: float = 45.0
     CACHE_TTL_SECONDS: int = 3600

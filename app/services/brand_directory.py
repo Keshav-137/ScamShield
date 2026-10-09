@@ -23,6 +23,7 @@ class OfficialBrandProfile(BaseModel):
     official_upi_handles: List[str]
     verified_helplines: List[str] = Field(default_factory=list)
     live_helplines: List[str] = Field(default_factory=list)
+    live_checked: bool = False
     notes: Optional[str] = None
     source: str = "curated"
 
